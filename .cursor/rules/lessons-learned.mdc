@@ -1,0 +1,28 @@
+---
+description: learning journal for Free Throw Frenzy
+globs: 
+alwaysApply: false
+---
+# Lessons Learned — Free Throw Frenzy
+
+## Project Patterns
+- CRA project bootstrapped with React 19; TypeScript added as a dependency.
+- Game engine is pure TS with no React dependency for hot-loop performance.
+- Canvas rendering and React HUD are separated; state flows via callbacks/refs.
+
+## Preferences
+- Minimal dependencies: no Phaser, Matter.js, or similar engines.
+- Vector-only graphics (canvas arcs/rects) — no image assets for v1.
+- Tailwind for all UI styling; no additional CSS frameworks.
+
+## Known Challenges
+- CRA + TypeScript requires renaming .js → .tsx and adding tsconfig.json.
+- Mobile touch input needs `passive: false` for `touchstart` to prevent scroll.
+- Canvas must resize responsively without losing aspect ratio.
+
+## Decisions Log
+| Date | Decision | Rationale |
+|------|----------|-----------|
+| 2026-08-19 | CRA over Vite | Project already bootstrapped with CRA |
+| 2026-08-19 | Single canvas + React overlay | Simpler compositing, better perf |
+| 2026-08-19 | Euler integration for physics | Simple, fast, sufficient for 2D ball arc |
