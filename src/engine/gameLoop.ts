@@ -2,7 +2,7 @@ import { GameState, GameCallbacks } from '../types/game';
 import { updatePhysics, launchBall } from './physics';
 import { updateCharge } from './input';
 import { render } from './renderer';
-import { resetBall } from './gameState';
+import { resetBall, saveHighScore } from './gameState';
 
 export function startGameLoop(
   ctx: CanvasRenderingContext2D,
@@ -19,7 +19,7 @@ export function startGameLoop(
     const dt = Math.min(rawDt, 0.05);
     lastTime = now;
 
-    update(state, dt, callbacks);
+    update(state, dt);
     render(ctx, state);
     callbacks.onStateChange(state);
     animId = requestAnimationFrame(tick);
@@ -33,7 +33,7 @@ export function startGameLoop(
   };
 }
 
-function update(state: GameState, dt: number, callbacks: GameCallbacks): void {
+function update(state: GameState, dt: number): void {
   if (state.phase === 'gameover') return;
 
   updateCharge(state, dt);
@@ -42,6 +42,7 @@ function update(state: GameState, dt: number, callbacks: GameCallbacks): void {
     state.shotTimer -= dt;
     if (state.shotTimer <= 0) {
       state.phase = 'gameover';
+      saveHighScore(state.score);
       return;
     }
   }

@@ -13,12 +13,15 @@ flowchart LR
 
     subgraph Engine["Game Engine (pure TS)"]
         Loop["gameLoop.ts\n(requestAnimationFrame)"]
-        Physics["physics.ts\n(gravity, wind, collision)"]
+        Physics["physics.ts\n(solveArcVelocity, collision)"]
         Input["input.ts\n(keyboard + touch)"]
-        Renderer["renderer.ts\n(canvas draw calls)"]
+        Renderer["renderer.ts\n(cel-shaded canvas)"]
         State["gameState.ts\n(score, streak, timer, ball)"]
+        Audio["audio.ts\n(Web Audio API)"]
+        Cfg["config.ts\n(all constants)"]
     end
 
+    EB["ErrorBoundary"] --> App
     App --> Canvas
     App --> HUD
     Canvas --> Loop
@@ -68,3 +71,8 @@ free-throw-frenzy/
 - **No game engine**: Custom physics keeps bundle tiny and demonstrates skill.
 - **Single canvas**: Simpler compositing; HUD is a React overlay, not drawn on canvas.
 - **State outside React**: Game state is a plain TS object mutated each frame for performance; React only reads it for HUD via callbacks/refs.
+- **Exact arc solver**: `solveArcVelocity` computes the initial velocity vector needed to hit a target at a given peak height, guaranteeing makeable shots.
+- **Cel-shaded rendering**: Multi-tone fills with consistent dark outlines for a stylized cartoon look.
+- **Web Audio API**: Synthesized sounds (no audio files) — keeps bundle small and loads instantly.
+- **Error boundary**: Prevents full-page crashes; offers recovery UI.
+- **Config module**: Single source of truth for all tunable game constants.

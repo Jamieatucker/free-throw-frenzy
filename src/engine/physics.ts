@@ -1,23 +1,63 @@
 import { GameState, Vec2 } from '../types/game';
+import { CONFIG } from './config';
+import { playSound } from './audio';
 
-const GRAVITY = 980;
-const RESTITUTION = 0.55;
+const { GRAVITY, RESTITUTION } = CONFIG;
+
+/**
+ * Compute the exact velocity needed to land the ball at (targetX, targetY)
+ * from (startX, startY) with a given peak height above the start.
+ */
+function solveArcVelocity(
+  sx: number, sy: number,
+  tx: number, ty: number,
+  peakHeight: number
+): Vec2 {
+  const peakY = Math.min(sy, ty) - peakHeight;
+  const dyUp = peakY - sy;
+  // time to reach peak: vy0 = -sqrt(2*g*|dyUp|), t_up = -vy0/g
+  const vy0 = -Math.sqrt(2 * GRAVITY * Math.abs(dyUp));
+  const tUp = -vy0 / GRAVITY;
+  // time from peak to target: dyDown = ty - peakY, t_down = sqrt(2*dyDown/g)
+  const dyDown = ty - peakY;
+  const tDown = Math.sqrt(2 * Math.max(0, dyDown) / GRAVITY);
+  const totalT = tUp + tDown;
+  const vx = (tx - sx) / totalT;
+  return { x: vx, y: vy0 };
+}
 
 export function launchBall(state: GameState): void {
   const power = state.chargePower;
-  const dx = state.hoop.rimLeftX + 20 - state.ball.pos.x;
-  const dy = state.hoop.rimY - state.ball.pos.y;
-  const dist = Math.sqrt(dx * dx + dy * dy);
+  const ideal = CONFIG.IDEAL_POWER;
+  const tolerance = ideal * CONFIG.POWER_TOLERANCE;
 
-  const idealSpeed = dist * 1.35;
-  const speed = idealSpeed * (0.5 + power * 0.7);
+  const rimCenterX = (state.hoop.rimLeftX + state.hoop.rimRightX) / 2;
+  const rimCenterY = state.hoop.rimY;
+  const sx = state.ball.pos.x;
+  const sy = state.ball.pos.y;
 
-  const idealAngle = Math.atan2(dy - dist * 0.55, dx);
-  const angle = idealAngle + (power - 0.72) * 0.4;
+  const dx = rimCenterX - sx;
+  const basePeak = Math.abs(dx) * 0.45 + 80;
 
-  state.ball.vel.x = Math.cos(angle) * speed;
-  state.ball.vel.y = Math.sin(angle) * speed;
+  if (Math.abs(power - ideal) <= tolerance) {
+    // Within sweet spot — guaranteed make with slight variance
+    const peakH = basePeak + (Math.random() - 0.5) * 10;
+    const vel = solveArcVelocity(sx, sy, rimCenterX, rimCenterY - 5, peakH);
+    state.ball.vel.x = vel.x;
+    state.ball.vel.y = vel.y;
+  } else {
+    // Outside sweet spot — deviate proportionally to error
+    const error = (power - ideal) / ideal;
+    const peakH = basePeak * (1 + error * 0.8);
+    const targetX = rimCenterX + error * 120;
+    const targetY = rimCenterY - 20 + error * 60;
+    const vel = solveArcVelocity(sx, sy, targetX, targetY, Math.max(40, peakH));
+    state.ball.vel.x = vel.x;
+    state.ball.vel.y = vel.y;
+  }
+
   state.phase = 'flying';
+  playSound('shoot');
 }
 
 export function updatePhysics(state: GameState, dt: number): void {
@@ -78,18 +118,19 @@ function checkBackboardCollision(state: GameState): void {
 
 function checkScore(state: GameState): void {
   const { ball, hoop } = state;
-  const inRimX = ball.pos.x > hoop.rimLeftX + 8 && ball.pos.x < hoop.rimRightX - 8;
-  const crossedRimY = ball.pos.y > hoop.rimY && ball.pos.y < hoop.rimY + 15;
+  const inRimX = ball.pos.x > hoop.rimLeftX + 5 && ball.pos.x < hoop.rimRightX - 5;
+  const crossedRimY = ball.pos.y > hoop.rimY && ball.pos.y < hoop.rimY + 20;
   const goingDown = ball.vel.y > 0;
 
   if (inRimX && crossedRimY && goingDown) {
     state.score += state.multiplier;
     state.streak += 1;
-    state.multiplier = Math.min(10, state.streak + 1);
+    state.multiplier = Math.min(CONFIG.MAX_MULTIPLIER, state.streak + 1);
     state.currency += state.multiplier;
     state.phase = 'scored';
     state.feedbackType = 'score';
-    state.feedbackTimer = 1.2;
+    state.feedbackTimer = CONFIG.FEEDBACK_DURATION;
+    playSound('score');
 
     const shift = Math.min(state.streak * 8, state.canvasW * 0.15);
     state.player.x = state.player.baseX + shift;
@@ -98,7 +139,7 @@ function checkScore(state: GameState): void {
 
 function checkOutOfBounds(state: GameState): void {
   const { ball, canvasW, canvasH } = state;
-  const groundY = canvasH * 0.82;
+  const groundY = canvasH * CONFIG.GROUND_Y_RATIO;
 
   if (ball.pos.y > groundY + 30 || ball.pos.x > canvasW + 50 || ball.pos.x < -50) {
     if (state.phase === 'flying') {
@@ -106,16 +147,16 @@ function checkOutOfBounds(state: GameState): void {
       state.streak = 0;
       state.multiplier = 1;
       state.feedbackType = 'miss';
-      state.feedbackTimer = 1.2;
+      state.feedbackTimer = CONFIG.FEEDBACK_DURATION;
       state.player.x = state.player.baseX;
     }
   }
 }
 
-export function computeIdealPower(state: GameState): number {
-  return 0.72;
+export function computeIdealPower(_state: GameState): number {
+  return CONFIG.IDEAL_POWER;
 }
 
 export function isWithinTolerance(power: number, ideal: number): boolean {
-  return Math.abs(power - ideal) <= ideal * 0.03;
+  return Math.abs(power - ideal) <= ideal * CONFIG.POWER_TOLERANCE;
 }

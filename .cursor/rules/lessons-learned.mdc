@@ -26,3 +26,7 @@ alwaysApply: false
 | 2026-08-19 | CRA over Vite | Project already bootstrapped with CRA |
 | 2026-08-19 | Single canvas + React overlay | Simpler compositing, better perf |
 | 2026-08-19 | Euler integration for physics | Simple, fast, sufficient for 2D ball arc |
+| 2026-08-19 | solveArcVelocity over angle/speed formula | Exact math guarantees ball reaches target — old formula was broken |
+| 2026-08-19 | Gravity 680 over 980 | More visible arcs, better gameplay feel |
+| 2026-08-19 | Web Audio API synthesis over audio files | Zero assets, instant load, smaller bundle |
+| 2026-08-19 | Cel-shading style | Multi-tone fills + dark outlines give cartoon look with pure canvas API |

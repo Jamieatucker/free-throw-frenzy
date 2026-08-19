@@ -22,10 +22,11 @@ npm run build      # production bundle
 ## Key Technical Decisions
 
 ### Physics Model
-- **Gravity**: constant `g = 980 px/s²` (scaled for canvas).
-- **Wind**: random horizontal acceleration ±20 px/s², re-rolled per shot.
-- **Ball trajectory**: Euler integration each frame (`vx += ax*dt`, `x += vx*dt`).
-- **Collision**: circle-circle (ball vs rim endpoints), circle-rect (ball vs backboard). Bounce uses coefficient of restitution ~0.6.
+- **Gravity**: constant `g = 680 px/s²` (scaled for canvas, configured in `config.ts`).
+- **Wind**: random horizontal acceleration ±30 px/s², re-rolled per shot.
+- **Ball trajectory**: `solveArcVelocity` computes exact initial velocity to land ball at target with a specified peak height. Euler integration each frame.
+- **Collision**: circle-circle (ball vs rim endpoints), circle-rect (ball vs backboard). Bounce uses coefficient of restitution 0.5.
+- **Shot guarantee**: At ideal power (55% ± 3%), the ball is aimed directly at rim center — always makeable.
 
 ### Input Handling
 - Desktop: `keydown`/`keyup` on spacebar. Charge accumulates while held.
@@ -36,14 +37,20 @@ npm run build      # production bundle
 - Ideal power for a make is computed from player distance to hoop.
 - Accepted range: `idealPower ± 3%`. Within this window the ball trajectory is nudged to go in.
 
-### Rendering Pipeline (60 FPS)
+### Rendering Pipeline (60 FPS) — Cel-Shaded Style
 1. Clear canvas.
-2. Draw court background (gradient + lines).
-3. Draw backboard + rim + net.
-4. Draw player silhouette.
-5. Draw ball (with rotation).
-6. Draw power meter (during charge).
-7. Draw "on-fire" particles when streak ≥ 5.
+2. Draw sky (gradient + stars).
+3. Draw court (3-band cel shading + dashed free-throw line + pole).
+4. Draw backboard + rim + net (cel-shaded with dark outlines).
+5. Draw player (multi-tone jersey, skin highlight/shadow, hair, animated shooting arm).
+6. Draw ball (dark/light halves, highlight spot, seam curve, cel outline).
+7. Draw power meter with gradient fill + ideal zone highlight.
+8. Draw "on-fire" particles when streak ≥ 5.
+
+### Audio
+- Web Audio API synthesized sounds (no asset files).
+- Shoot: noise burst + triangle tone. Score: ascending 3-note chime. Miss: descending sawtooth.
+- AudioContext created lazily on first interaction; resumed if suspended.
 
 ### Performance Constraints
 - No allocations in hot loop (pre-allocate vectors).
@@ -52,8 +59,10 @@ npm run build      # production bundle
 
 ## Design Patterns
 - **Game State Machine**: `idle → charging → flying → scored/missed → reset → idle`.
-- **Observer callbacks**: engine emits events (`onScore`, `onMiss`, `onTimerTick`) consumed by React HUD.
+- **Observer callbacks**: engine emits events consumed by React HUD via shallow-copy callback.
 - **Separation of concerns**: React owns DOM/UI; engine owns canvas + physics. They share state via refs, not re-renders.
+- **Error Boundary**: Class component wraps entire app; catches render errors with friendly recovery UI.
+- **Config module**: All tunable constants in `src/engine/config.ts` — single source of truth.
 
 ## Technical Constraints
 - No external physics/game engines.

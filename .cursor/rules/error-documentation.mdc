@@ -6,4 +6,13 @@ alwaysApply: false
 # Error Documentation — Free Throw Frenzy
 
 ## Errors & Resolutions
-_No errors documented yet. This file will be updated as issues arise during development._
+
+### 1. Impossible free throw shots (v0.2.0)
+**Problem**: The original `launchBall` used `idealAngle = atan2(dy - dist*0.55, dx)` and `speed = idealSpeed * (0.5 + power*0.7)` — these formulas produced trajectories that could never reach the rim at any power level.
+**Root cause**: The angle/speed mapping was arbitrary, not based on projectile physics. The "ideal" power of 0.72 produced an angle that overshot, and other powers either undershot or flew past.
+**Fix**: Replaced with `solveArcVelocity` that computes the exact initial velocity (vx, vy) needed to hit a target point given a peak arc height, using `vy0 = -sqrt(2*g*|dy|)` and total flight time to derive vx. At ideal power ±3%, the target is rim center — guaranteed score.
+
+### 2. CRA doesn't support jest `roots` config
+**Problem**: Tests in `tests/` directory were not discovered by CRA's jest runner.
+**Root cause**: CRA only allows overriding a limited set of jest options; `roots` is not one of them.
+**Fix**: Moved tests to `src/__tests__/` which CRA discovers automatically.

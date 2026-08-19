@@ -1,9 +1,15 @@
 import { createInitialState, resetBall } from '../engine/gameState';
 import { updatePhysics, launchBall, isWithinTolerance } from '../engine/physics';
+import { CONFIG } from '../engine/config';
+
+// Mock audio to avoid Web Audio API in tests
+jest.mock('../engine/audio', () => ({
+  playSound: jest.fn(),
+}));
 
 describe('Physics Engine', () => {
-  const W = 900;
-  const H = 500;
+  const W = CONFIG.CANVAS_W;
+  const H = CONFIG.CANVAS_H;
 
   it('should apply gravity to a flying ball', () => {
     const state = createInitialState(W, H);
@@ -44,7 +50,7 @@ describe('Physics Engine', () => {
   it('should mark missed when ball goes out of bounds', () => {
     const state = createInitialState(W, H);
     state.phase = 'flying';
-    state.ball.pos.y = H * 0.82 + 50;
+    state.ball.pos.y = H * CONFIG.GROUND_Y_RATIO + 50;
     state.ball.vel.y = 100;
 
     updatePhysics(state, 0.016);
@@ -53,23 +59,44 @@ describe('Physics Engine', () => {
     expect(state.streak).toBe(0);
   });
 
-  it('isWithinTolerance should accept ±3% of ideal', () => {
-    expect(isWithinTolerance(0.72, 0.72)).toBe(true);
-    expect(isWithinTolerance(0.74, 0.72)).toBe(true);
-    expect(isWithinTolerance(0.70, 0.72)).toBe(true);
-    expect(isWithinTolerance(0.80, 0.72)).toBe(false);
+  it('isWithinTolerance should accept within tolerance range', () => {
+    const ideal = CONFIG.IDEAL_POWER;
+    const tol = ideal * CONFIG.POWER_TOLERANCE;
+    expect(isWithinTolerance(ideal, ideal)).toBe(true);
+    expect(isWithinTolerance(ideal + tol, ideal)).toBe(true);
+    expect(isWithinTolerance(ideal - tol, ideal)).toBe(true);
+    expect(isWithinTolerance(ideal + tol * 3, ideal)).toBe(false);
   });
 
-  it('should launch ball with velocity when power is set', () => {
+  it('should launch ball with velocity when power is at ideal', () => {
     const state = createInitialState(W, H);
     state.phase = 'charging';
-    state.chargePower = 0.72;
+    state.chargePower = CONFIG.IDEAL_POWER;
 
     launchBall(state);
 
     expect(state.phase).toBe('flying');
-    expect(state.ball.vel.x).not.toBe(0);
-    expect(state.ball.vel.y).not.toBe(0);
+    expect(state.ball.vel.x).toBeGreaterThan(0);
+    expect(state.ball.vel.y).toBeLessThan(0);
+  });
+
+  it('should produce an arc that can reach the rim at ideal power', () => {
+    const state = createInitialState(W, H);
+    state.phase = 'charging';
+    state.chargePower = CONFIG.IDEAL_POWER;
+    state.wind = 0;
+
+    launchBall(state);
+
+    // Simulate ~2 seconds of flight
+    let maxY = state.ball.pos.y;
+    for (let i = 0; i < 200; i++) {
+      updatePhysics(state, 0.01);
+      if (state.ball.pos.y < maxY) maxY = state.ball.pos.y;
+      if (state.phase !== 'flying') break;
+    }
+
+    expect(state.phase).toBe('scored');
   });
 
   it('resetBall should return ball to player position', () => {
@@ -82,6 +109,6 @@ describe('Physics Engine', () => {
     expect(state.phase).toBe('idle');
     expect(state.ball.vel.x).toBe(0);
     expect(state.ball.vel.y).toBe(0);
-    expect(state.shotTimer).toBe(10);
+    expect(state.shotTimer).toBe(CONFIG.SHOT_TIMER);
   });
 });

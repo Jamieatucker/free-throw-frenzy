@@ -1,4 +1,5 @@
 import { GameState } from '../types/game';
+import { CONFIG } from './config';
 
 let isCharging = false;
 
@@ -52,6 +53,6 @@ export function setupInput(
 
 export function updateCharge(state: GameState, dt: number): void {
   if (state.phase === 'charging') {
-    state.chargePower = Math.min(1, state.chargePower + dt / 1.5);
+    state.chargePower = Math.min(1, state.chargePower + dt / CONFIG.CHARGE_DURATION);
   }
 }
