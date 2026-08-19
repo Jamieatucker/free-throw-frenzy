@@ -1,49 +1,37 @@
 # Changelog — Free Throw Frenzy
 
-## [0.3.0] — 2026-08-19
+## [0.4.0] — 2026-08-19
 ### Fixed
-- **Game-breaking physics**: Rewrote `launchBall` with proper projectile arc solver (`solveArcVelocity`) that computes exact velocity to reach the rim. Shots at ideal power (55%) are guaranteed to score.
-- Widened rim from 50px to 60px and relaxed scoring detection zone for fairer gameplay.
-- Moved player closer (22% from left) and hoop closer (72% from left) for better arc geometry.
+- **Max power exploit**: Holding spacebar/touch to max now auto-fires with severe accuracy penalty (±45% random offset). No more guaranteed scores at full power.
+- **Ground bounce**: Ball now bounces off the court floor like a real basketball (restitution 0.65, friction 0.85) instead of phasing through. After 5 bounces or velocity < 20, it counts as a miss.
+- **Behind-hoop shooting**: Ball can now fly past the backboard — only collides when hitting the actual board face, allowing overshoots.
+- **Backboard visual**: Widened from 8px to 14px, removed the red target square that looked bad in 2D. Added proper 3-tone cel shading.
 
 ### Added
-- **Cel-shaded graphics**: Player now has a multi-toned jersey (#7), skin with highlight/shadow halves, hair, and a shooting arm that animates during charge. Ball has dark/light halves, highlight spot, and seam curve. Backboard, rim, and court all have cel-shading bands and dark outlines.
-- **Sound effects**: Web Audio API synthesized sounds for shoot (noise burst + triangle), score (ascending 3-note chime), miss (descending sawtooth), and bounce.
-- **Error boundary**: `ErrorBoundary` component wraps the entire app; shows friendly "Try Again" UI on crash.
-- **High score persistence**: Scores saved to `localStorage`; displayed on game-over screen.
-- **Config module**: All magic numbers extracted to `src/engine/config.ts` (gravity, restitution, tolerances, canvas size, etc.).
-- **New test**: "should produce an arc that can reach the rim at ideal power" — simulates 2s of flight and asserts `phase === 'scored'`.
-- **New test**: localStorage high score persistence.
+- **In-game shop**: Click the COINS HUD element to open shop. Also accessible from game-over screen. Purchase and equip backgrounds with earned coins (persisted to localStorage).
+- **8 backgrounds**: Pro Stadium (default, free), Basketball Park (50), Farm (100), Desert (150), Pirate Ship (200), Amazon Jungle (250), NYC Rooftop (300), Outer Space (500). Each has unique cel-shaded artwork.
+- **Cade Cunningham player design**: Detroit Pistons blue jersey (#2) with red stripe accents, white pinstripe, red shoes, darker skin tone matching Cunningham's appearance.
+- **Utility modules**: `src/utils/math.ts` (distance, clamp, lerp, randomRange), `src/utils/shopData.ts` (purchase, unlock, persist backgrounds/coins).
+- **15 new tests** (28 total): shop purchase/unlock/persist (8), math utilities (4), ground bounce (1), max bounces miss (1), behind-hoop fly-through (1).
 
 ### Changed
-- Reduced gravity from 980 to 680 px/s² for more visible arcs.
-- Ideal power shifted from 0.72 to 0.55 (mid-meter is now the sweet spot).
-- Wind range reduced from ±40 to ±30 for fairer shots.
-- Power meter now shows a gradient (green→yellow→red) with a highlighted ideal zone band.
-- Net strings now have subtle sway animation via sine wave.
-- Stars added to sky background.
-- Court now shows dashed free-throw line and hoop pole.
+- Power meter now shows "MAX!" warning and red danger zone at top.
+- `updateCharge` now accepts auto-fire callback for max-power trigger.
+- Coins saved to localStorage at game over for shop persistence.
+- `bounceCount` added to GameState for ground bounce tracking.
+
+## [0.3.0] — 2026-08-19
+### Fixed
+- Rewrote `launchBall` with `solveArcVelocity` — proper projectile solver.
+- Widened rim, relaxed scoring zone.
+
+### Added
+- Cel-shaded graphics, sound effects, error boundary, high score persistence, config module.
 
 ## [0.2.0] — 2026-08-19
 ### Added
-- Full game engine: gameState, physics, input, renderer, gameLoop (all TypeScript).
-- React components: GameCanvas, HUD, App.tsx.
-- Tailwind CSS integration with custom styles.
-- Physics: gravity, wind, rim/backboard collision, ball bounce.
-- Scoring: streak multiplier (max 10x), currency system, player distance shifting.
-- Visual feedback: SWISH/MISS overlays, fire particle effect at streak >= 5, color-changing power meter.
-- 10-second shot timer with auto game-over.
-- Desktop (spacebar) and mobile (touch) input support.
-- 11 unit tests (physics + gameState) — all passing.
-- Architecture diagram in diagrams/architecture.md (Mermaid).
-- Feature documentation in docs/features.md.
-
-### Changed
-- Converted all .js files to .tsx/.ts.
-- Updated index.html title and meta description.
+- Full game engine, React components, Tailwind CSS, physics, scoring, input, tests.
 
 ## [0.1.0] — 2026-08-19
 ### Added
-- Initialized CRA project with React 19.
-- Created Memory Files.
-- Established directory structure.
+- Initial CRA project, Memory Files, directory structure.

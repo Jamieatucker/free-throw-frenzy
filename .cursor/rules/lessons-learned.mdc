@@ -30,3 +30,7 @@ alwaysApply: false
 | 2026-08-19 | Gravity 680 over 980 | More visible arcs, better gameplay feel |
 | 2026-08-19 | Web Audio API synthesis over audio files | Zero assets, instant load, smaller bundle |
 | 2026-08-19 | Cel-shading style | Multi-tone fills + dark outlines give cartoon look with pure canvas API |
+| 2026-08-19 | Auto-fire at max power | Prevents exploit; callback pattern in updateCharge avoids extra state |
+| 2026-08-19 | Ground bounce vs out-of-bounds | Separate checkGroundBounce before checkOutOfBounds; bounce count limits prevent infinite loops |
+| 2026-08-19 | Utils must be in src/ | CRA enforces import boundary; all shared code goes in src/utils/ |
+| 2026-08-19 | Shop persistence in localStorage | Separate keys for unlocked bgs, active bg, and coins; graceful fallback on error |

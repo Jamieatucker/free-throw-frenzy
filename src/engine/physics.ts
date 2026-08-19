@@ -1,13 +1,10 @@
 import { GameState, Vec2 } from '../types/game';
 import { CONFIG } from './config';
 import { playSound } from './audio';
+import { randomRange } from '../utils/math';
 
 const { GRAVITY, RESTITUTION } = CONFIG;
 
-/**
- * Compute the exact velocity needed to land the ball at (targetX, targetY)
- * from (startX, startY) with a given peak height above the start.
- */
 function solveArcVelocity(
   sx: number, sy: number,
   tx: number, ty: number,
@@ -15,10 +12,8 @@ function solveArcVelocity(
 ): Vec2 {
   const peakY = Math.min(sy, ty) - peakHeight;
   const dyUp = peakY - sy;
-  // time to reach peak: vy0 = -sqrt(2*g*|dyUp|), t_up = -vy0/g
   const vy0 = -Math.sqrt(2 * GRAVITY * Math.abs(dyUp));
   const tUp = -vy0 / GRAVITY;
-  // time from peak to target: dyDown = ty - peakY, t_down = sqrt(2*dyDown/g)
   const dyDown = ty - peakY;
   const tDown = Math.sqrt(2 * Math.max(0, dyDown) / GRAVITY);
   const totalT = tUp + tDown;
@@ -39,14 +34,23 @@ export function launchBall(state: GameState): void {
   const dx = rimCenterX - sx;
   const basePeak = Math.abs(dx) * 0.45 + 80;
 
-  if (Math.abs(power - ideal) <= tolerance) {
-    // Within sweet spot — guaranteed make with slight variance
+  if (power >= 0.99) {
+    // Max power exploit: auto-fire with severe accuracy penalty
+    const penalty = CONFIG.MAX_POWER_ACCURACY_PENALTY;
+    const offsetX = randomRange(-penalty, penalty) * 300;
+    const offsetY = randomRange(-penalty, penalty) * 150;
+    const peakH = basePeak * randomRange(0.6, 1.6);
+    const targetX = rimCenterX + offsetX;
+    const targetY = rimCenterY + offsetY;
+    const vel = solveArcVelocity(sx, sy, targetX, targetY, Math.max(50, peakH));
+    state.ball.vel.x = vel.x;
+    state.ball.vel.y = vel.y;
+  } else if (Math.abs(power - ideal) <= tolerance) {
     const peakH = basePeak + (Math.random() - 0.5) * 10;
     const vel = solveArcVelocity(sx, sy, rimCenterX, rimCenterY - 5, peakH);
     state.ball.vel.x = vel.x;
     state.ball.vel.y = vel.y;
   } else {
-    // Outside sweet spot — deviate proportionally to error
     const error = (power - ideal) / ideal;
     const peakH = basePeak * (1 + error * 0.8);
     const targetX = rimCenterX + error * 120;
@@ -57,6 +61,7 @@ export function launchBall(state: GameState): void {
   }
 
   state.phase = 'flying';
+  state.bounceCount = 0;
   playSound('shoot');
 }
 
@@ -74,6 +79,7 @@ export function updatePhysics(state: GameState, dt: number): void {
   checkRimCollision(state);
   checkBackboardCollision(state);
   checkScore(state);
+  checkGroundBounce(state);
   checkOutOfBounds(state);
 }
 
@@ -97,6 +103,7 @@ function checkRimCollision(state: GameState): void {
       if (relVel < 0) {
         ball.vel.x -= (1 + RESTITUTION) * relVel * nx;
         ball.vel.y -= (1 + RESTITUTION) * relVel * ny;
+        playSound('bounce');
       }
       ball.pos.x = rp.x + nx * minDist;
       ball.pos.y = rp.y + ny * minDist;
@@ -108,11 +115,42 @@ function checkBackboardCollision(state: GameState): void {
   const { ball, hoop } = state;
   if (
     ball.pos.x + ball.radius > hoop.backboardX &&
+    ball.pos.x - ball.radius < hoop.backboardX + CONFIG.BACKBOARD_WIDTH &&
     ball.pos.y > hoop.backboardTop &&
     ball.pos.y < hoop.backboardBottom
   ) {
-    ball.pos.x = hoop.backboardX - ball.radius;
+    if (ball.vel.x > 0) {
+      ball.pos.x = hoop.backboardX - ball.radius;
+    } else {
+      ball.pos.x = hoop.backboardX + CONFIG.BACKBOARD_WIDTH + ball.radius;
+    }
     ball.vel.x = -ball.vel.x * RESTITUTION;
+    playSound('bounce');
+  }
+}
+
+function checkGroundBounce(state: GameState): void {
+  const { ball, canvasH } = state;
+  const groundY = canvasH * CONFIG.GROUND_Y_RATIO;
+
+  if (ball.pos.y + ball.radius >= groundY && ball.vel.y > 0) {
+    ball.pos.y = groundY - ball.radius;
+    ball.vel.y = -ball.vel.y * CONFIG.GROUND_RESTITUTION;
+    ball.vel.x *= CONFIG.GROUND_FRICTION;
+    state.bounceCount += 1;
+    playSound('bounce');
+
+    if (state.bounceCount >= CONFIG.MAX_BOUNCES || Math.abs(ball.vel.y) < 20) {
+      if (state.phase === 'flying') {
+        state.phase = 'missed';
+        state.streak = 0;
+        state.multiplier = 1;
+        state.feedbackType = 'miss';
+        state.feedbackTimer = CONFIG.FEEDBACK_DURATION;
+        state.player.x = state.player.baseX;
+        playSound('miss');
+      }
+    }
   }
 }
 
@@ -138,10 +176,9 @@ function checkScore(state: GameState): void {
 }
 
 function checkOutOfBounds(state: GameState): void {
-  const { ball, canvasW, canvasH } = state;
-  const groundY = canvasH * CONFIG.GROUND_Y_RATIO;
-
-  if (ball.pos.y > groundY + 30 || ball.pos.x > canvasW + 50 || ball.pos.x < -50) {
+  const { ball, canvasW } = state;
+  // Only x-axis out of bounds now (ground bounce handles y)
+  if (ball.pos.x > canvasW + 80 || ball.pos.x < -80) {
     if (state.phase === 'flying') {
       state.phase = 'missed';
       state.streak = 0;

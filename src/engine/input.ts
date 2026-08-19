@@ -28,7 +28,7 @@ export function setupInput(
   };
 
   const keyDown = (e: KeyboardEvent) => {
-    if (e.code === 'Space') onDown(e);
+    if (e.code === 'Space' && !e.repeat) onDown(e);
   };
   const keyUp = (e: KeyboardEvent) => {
     if (e.code === 'Space') onUp(e);
@@ -51,8 +51,12 @@ export function setupInput(
   };
 }
 
-export function updateCharge(state: GameState, dt: number): void {
+export function updateCharge(state: GameState, dt: number, onAutoFire: () => void): void {
   if (state.phase === 'charging') {
     state.chargePower = Math.min(1, state.chargePower + dt / CONFIG.CHARGE_DURATION);
+    if (state.chargePower >= 1) {
+      isCharging = false;
+      onAutoFire();
+    }
   }
 }

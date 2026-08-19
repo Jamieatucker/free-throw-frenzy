@@ -12,6 +12,18 @@ alwaysApply: false
 **Root cause**: The angle/speed mapping was arbitrary, not based on projectile physics. The "ideal" power of 0.72 produced an angle that overshot, and other powers either undershot or flew past.
 **Fix**: Replaced with `solveArcVelocity` that computes the exact initial velocity (vx, vy) needed to hit a target point given a peak arc height, using `vy0 = -sqrt(2*g*|dy|)` and total flight time to derive vx. At ideal power ±3%, the target is rim center — guaranteed score.
 
+### 3. CRA restricts imports to src/ directory
+**Problem**: Utils in `utils/` (outside `src/`) caused "imports outside of src/ are not supported" build error.
+**Fix**: Moved all utility files to `src/utils/`. CRA enforces this boundary.
+
+### 4. Max power exploit
+**Problem**: Players could hold spacebar indefinitely and always score by releasing at max power (power=1.0 still produced accurate shots).
+**Fix**: Added auto-fire at power >= 0.99 with `MAX_POWER_ACCURACY_PENALTY = 0.45` — applies ±135px random offset to target, making max-power shots wildly inaccurate.
+
+### 5. Ball phasing through ground
+**Problem**: `checkOutOfBounds` triggered miss when `ball.y > groundY + 30`, so the ball disappeared through the floor.
+**Fix**: Added `checkGroundBounce` that reverses vy with `GROUND_RESTITUTION = 0.65` and applies `GROUND_FRICTION = 0.85` to vx. Tracks `bounceCount` and triggers miss after `MAX_BOUNCES = 5`.
+
 ### 2. CRA doesn't support jest `roots` config
 **Problem**: Tests in `tests/` directory were not discovered by CRA's jest runner.
 **Root cause**: CRA only allows overriding a limited set of jest options; `roots` is not one of them.

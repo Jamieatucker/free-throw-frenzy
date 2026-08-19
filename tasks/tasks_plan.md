@@ -41,15 +41,26 @@
 - [x] Extract magic numbers to config.ts
 - [x] New tests (arc-reach, high-score persistence) — 13 total
 
-## Future Work (Phase 7+)
-- [ ] Shop system: basketball skins, court designs, hoop paints
+## Phase 7: Gameplay Loop & Shop (v0.4.0) ✅
+- [x] Max power auto-fire with severe accuracy penalty
+- [x] Ground bounce physics (restitution, friction, max bounces)
+- [x] Behind-hoop shooting (backboard collision fix)
+- [x] In-game shop (click coins → shop overlay)
+- [x] 8 stage backgrounds (stadium + 7 purchasable)
+- [x] Cade Cunningham player design (Pistons #2)
+- [x] Wider backboard, removed red square
+- [x] Utility modules (math.ts, shopData.ts)
+- [x] 15 new tests (28 total across 4 suites)
+
+## Future Work (Phase 8+)
 - [ ] Difficulty scaling (wind increases, timer decreases with streak)
 - [ ] Screen shake on miss
 - [ ] Responsive canvas sizing with ResizeObserver
+- [ ] Ball skins / hoop paints in shop
 - [ ] Leaderboard backend
 
 ## Known Issues
 - None.
 
 ## Current Status
-v0.3.0 — All 13 tests pass. Build succeeds. Shots are always makeable at ideal power.
+v0.4.0 — All 28 tests pass. Build succeeds. Shop, backgrounds, and gameplay fixes all working.

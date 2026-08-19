@@ -5,9 +5,10 @@ import { getHighScore } from '../engine/gameState';
 interface Props {
   state: GameState | null;
   onRestart: () => void;
+  onOpenShop: () => void;
 }
 
-const HUD: React.FC<Props> = ({ state, onRestart }) => {
+const HUD: React.FC<Props> = ({ state, onRestart, onOpenShop }) => {
   if (!state) return null;
 
   const timerColor =
@@ -29,9 +30,14 @@ const HUD: React.FC<Props> = ({ state, onRestart }) => {
           <div className="text-yellow-300 text-xs font-mono">{state.multiplier}x MULTI</div>
         </div>
 
-        <div className="bg-black/50 rounded-lg px-4 py-2 backdrop-blur-sm text-center">
+        <div
+          className="bg-black/50 rounded-lg px-4 py-2 backdrop-blur-sm text-center pointer-events-auto cursor-pointer hover:bg-black/70 transition-colors"
+          onClick={onOpenShop}
+          title="Open Shop"
+        >
           <div className="text-white text-sm font-mono">COINS</div>
           <div className="text-xl font-bold text-yellow-400">{state.currency}</div>
+          <div className="text-gray-400 text-xs">TAP TO SHOP</div>
         </div>
 
         <div className="bg-black/50 rounded-lg px-4 py-2 backdrop-blur-sm text-right">
@@ -47,12 +53,20 @@ const HUD: React.FC<Props> = ({ state, onRestart }) => {
             <div className="text-white text-lg mb-1">Final Score: {state.score}</div>
             <div className="text-yellow-400 mb-1">Coins earned: {state.currency}</div>
             <div className="text-gray-400 text-sm mb-4">High Score: {Math.max(state.score, getHighScore())}</div>
-            <button
-              onClick={onRestart}
-              className="bg-green-500 hover:bg-green-600 text-white font-bold py-3 px-8 rounded-lg text-lg transition-colors"
-            >
-              Play Again
-            </button>
+            <div className="flex gap-3 justify-center">
+              <button
+                onClick={onRestart}
+                className="bg-green-500 hover:bg-green-600 text-white font-bold py-3 px-8 rounded-lg text-lg transition-colors"
+              >
+                Play Again
+              </button>
+              <button
+                onClick={onOpenShop}
+                className="bg-yellow-500 hover:bg-yellow-600 text-black font-bold py-3 px-6 rounded-lg text-lg transition-colors"
+              >
+                Shop
+              </button>
+            </div>
           </div>
         </div>
       )}

@@ -3,6 +3,7 @@ import { updatePhysics, launchBall } from './physics';
 import { updateCharge } from './input';
 import { render } from './renderer';
 import { resetBall, saveHighScore } from './gameState';
+import { saveCoins } from '../utils/shopData';
 
 export function startGameLoop(
   ctx: CanvasRenderingContext2D,
@@ -36,13 +37,16 @@ export function startGameLoop(
 function update(state: GameState, dt: number): void {
   if (state.phase === 'gameover') return;
 
-  updateCharge(state, dt);
+  updateCharge(state, dt, () => {
+    if (state.phase === 'charging') launchBall(state);
+  });
 
   if (state.phase === 'idle' || state.phase === 'charging') {
     state.shotTimer -= dt;
     if (state.shotTimer <= 0) {
       state.phase = 'gameover';
       saveHighScore(state.score);
+      saveCoins(state.currency);
       return;
     }
   }

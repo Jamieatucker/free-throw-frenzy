@@ -1,16 +1,22 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useRef } from 'react';
 import GameCanvas from './components/GameCanvas';
 import HUD from './components/HUD';
+import Shop from './components/Shop';
 import ErrorBoundary from './components/ErrorBoundary';
-import { GameState } from './types/game';
+import { GameState, BackgroundId } from './types/game';
 import { saveHighScore } from './engine/gameState';
+import { saveCoins, getSavedCoins } from './utils/shopData';
 import './styles/index.css';
 
 const App: React.FC = () => {
   const [hudState, setHudState] = useState<GameState | null>(null);
   const [key, setKey] = useState(0);
+  const [shopOpen, setShopOpen] = useState(false);
+  const [totalCoins, setTotalCoins] = useState(getSavedCoins);
+  const gameStateRef = useRef<GameState | null>(null);
 
   const onStateChange = useCallback((s: GameState) => {
+    gameStateRef.current = s;
     setHudState({
       ...s,
       ball: { ...s.ball, pos: { ...s.ball.pos }, vel: { ...s.ball.vel } },
@@ -19,12 +25,26 @@ const App: React.FC = () => {
     });
     if (s.phase === 'gameover') {
       saveHighScore(s.score);
+      const newTotal = getSavedCoins() + s.currency;
+      saveCoins(newTotal);
+      setTotalCoins(newTotal);
     }
   }, []);
 
   const onRestart = useCallback(() => {
     setKey((k) => k + 1);
     setHudState(null);
+  }, []);
+
+  const handleOpenShop = useCallback(() => {
+    setTotalCoins(getSavedCoins());
+    setShopOpen(true);
+  }, []);
+
+  const handleBackgroundChange = useCallback((bg: BackgroundId) => {
+    if (gameStateRef.current) {
+      gameStateRef.current.activeBackground = bg;
+    }
   }, []);
 
   return (
@@ -35,9 +55,17 @@ const App: React.FC = () => {
         </h1>
         <div className="relative">
           <GameCanvas key={key} onStateChange={onStateChange} />
-          <HUD state={hudState} onRestart={onRestart} />
+          <HUD state={hudState} onRestart={onRestart} onOpenShop={handleOpenShop} />
         </div>
       </div>
+      {shopOpen && (
+        <Shop
+          coins={totalCoins}
+          onClose={() => setShopOpen(false)}
+          onCoinsChange={(c) => setTotalCoins(c)}
+          onBackgroundChange={handleBackgroundChange}
+        />
+      )}
     </ErrorBoundary>
   );
 };

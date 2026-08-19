@@ -1,28 +1,29 @@
 # Active Context — Free Throw Frenzy
 
 ## Current Focus
-v0.3.0 complete. Fixed physics, added cel-shaded graphics, sound effects, error boundary, high scores, and config module.
+v0.4.0 complete. Major gameplay loop improvements, shop system, Cade Cunningham design, 8 stage backgrounds.
 
-## Recent Changes (v0.3.0)
-- Rewrote `launchBall` with `solveArcVelocity` — proper projectile solver guarantees makeable shots.
-- Cel-shaded graphics: multi-toned player (jersey, skin, hair, arm), shaded ball with seam curve, shaded rim/backboard/court.
-- Web Audio API sound effects (shoot, score, miss, bounce).
-- Error boundary wrapping entire app.
-- High score persistence via localStorage.
-- Extracted all magic numbers to `config.ts`.
-- 13 tests passing (added arc-reach and high-score tests).
+## Recent Changes (v0.4.0)
+- Max power exploit fixed: auto-fires at full charge with ±45% random accuracy penalty.
+- Ground bounce physics: ball bounces off court with restitution 0.65, friction 0.85, max 5 bounces before miss.
+- Behind-hoop shooting: backboard collision only triggers on face hits, allowing overshoots.
+- Backboard widened to 14px, removed red target square.
+- In-game shop: click COINS in HUD or from game-over screen. 7 purchasable backgrounds + default stadium.
+- Player redesigned as Cade Cunningham (Pistons #2, blue jersey, red stripes).
+- Utility modules in `src/utils/` (math, shopData).
+- 28 tests across 4 suites — all passing.
 
 ## Active Decisions
-- `solveArcVelocity` uses exact projectile math: computes vy0 and vx to land ball at target with given peak height.
-- Ideal power at 0.55 (center of meter) with ±3% tolerance — shots within sweet spot are auto-aimed at rim center.
-- Gravity reduced to 680 for visible arcs. Wind ±30.
-- Cel outlines use consistent `#1a1a2e` color at 2-2.5px width.
+- Shop data persisted in localStorage (unlocked backgrounds, active bg, coins).
+- `bounceCount` tracks ground bounces per shot; resets on `resetBall`.
+- Auto-fire uses `updateCharge` callback pattern — no extra state needed.
+- Utils live in `src/utils/` due to CRA's `src/` restriction.
 
 ## Next Steps
-1. Shop system (skins, court designs, hoop paints).
-2. Difficulty scaling (wind increases, timer decreases with streak).
-3. Screen shake on miss.
-4. Responsive canvas sizing with ResizeObserver.
+1. Difficulty scaling (wind increases, timer decreases with streak).
+2. Screen shake on miss.
+3. Responsive canvas sizing with ResizeObserver.
+4. Ball skins / hoop paints in shop.
 
 ## Blockers
 None.

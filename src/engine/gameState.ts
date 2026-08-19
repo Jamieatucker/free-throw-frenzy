@@ -1,5 +1,6 @@
 import { GameState, Hoop } from '../types/game';
 import { CONFIG } from './config';
+import { getActiveBackground } from '../utils/shopData';
 
 export function createHoop(canvasW: number, canvasH: number): Hoop {
   const groundY = canvasH * CONFIG.GROUND_Y_RATIO;
@@ -7,8 +8,8 @@ export function createHoop(canvasW: number, canvasH: number): Hoop {
   const backboardX = canvasW * CONFIG.HOOP_X_RATIO;
   return {
     backboardX,
-    backboardTop: rimY - 60,
-    backboardBottom: rimY + 10,
+    backboardTop: rimY - 70,
+    backboardBottom: rimY + 15,
     rimY,
     rimLeftX: backboardX - CONFIG.RIM_WIDTH,
     rimRightX: backboardX - 4,
@@ -42,6 +43,8 @@ export function createInitialState(canvasW: number, canvasH: number): GameState 
     canvasH,
     feedbackTimer: 0,
     feedbackType: null,
+    activeBackground: getActiveBackground(),
+    bounceCount: 0,
   };
 }
 
@@ -55,6 +58,7 @@ export function resetBall(state: GameState): void {
   state.chargePower = 0;
   state.shotTimer = CONFIG.SHOT_TIMER;
   state.wind = (Math.random() - 0.5) * CONFIG.WIND_RANGE * 2;
+  state.bounceCount = 0;
   state.phase = 'idle';
 }
 

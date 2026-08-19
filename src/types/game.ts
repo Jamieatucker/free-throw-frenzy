@@ -29,6 +29,23 @@ export interface Player {
   baseX: number;
 }
 
+export type BackgroundId =
+  | 'stadium'
+  | 'park'
+  | 'farm'
+  | 'desert'
+  | 'pirate'
+  | 'amazon'
+  | 'rooftop'
+  | 'space';
+
+export interface ShopItem {
+  id: BackgroundId;
+  name: string;
+  price: number;
+  description: string;
+}
+
 export interface GameState {
   phase: GamePhase;
   ball: Ball;
@@ -45,6 +62,8 @@ export interface GameState {
   canvasH: number;
   feedbackTimer: number;
   feedbackType: 'score' | 'miss' | null;
+  activeBackground: BackgroundId;
+  bounceCount: number;
 }
 
 export interface GameCallbacks {
