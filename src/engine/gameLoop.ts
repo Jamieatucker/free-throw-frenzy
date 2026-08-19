@@ -3,7 +3,9 @@ import { updatePhysics, launchBall } from './physics';
 import { updateCharge } from './input';
 import { render } from './renderer';
 import { resetBall, saveHighScore } from './gameState';
-import { saveCoins } from '../utils/shopData';
+import { saveCoins, getSavedCoins } from '../utils/shopData';
+
+let gameOverSaved = false;
 
 export function startGameLoop(
   ctx: CanvasRenderingContext2D,
@@ -13,6 +15,7 @@ export function startGameLoop(
   let lastTime = performance.now();
   let animId = 0;
   let running = true;
+  gameOverSaved = false;
 
   function tick(now: number) {
     if (!running) return;
@@ -35,7 +38,15 @@ export function startGameLoop(
 }
 
 function update(state: GameState, dt: number): void {
-  if (state.phase === 'gameover') return;
+  if (state.phase === 'gameover') {
+    if (!gameOverSaved) {
+      gameOverSaved = true;
+      saveHighScore(state.score);
+      const existing = getSavedCoins();
+      saveCoins(existing + state.currency);
+    }
+    return;
+  }
 
   updateCharge(state, dt, () => {
     if (state.phase === 'charging') launchBall(state);
@@ -45,15 +56,13 @@ function update(state: GameState, dt: number): void {
     state.shotTimer -= dt;
     if (state.shotTimer <= 0) {
       state.phase = 'gameover';
-      saveHighScore(state.score);
-      saveCoins(state.currency);
       return;
     }
   }
 
   updatePhysics(state, dt);
 
-  if (state.feedbackTimer > 0) {
+  if (state.feedbackTimer > 0 && state.phase !== 'falling_through') {
     state.feedbackTimer -= dt;
   }
 

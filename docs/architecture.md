@@ -8,7 +8,7 @@ flowchart LR
         App["App.tsx"]
         Canvas["GameCanvas.tsx\n(single <canvas>)"]
         HUD["HUD.tsx\n(score, streak, timer)"]
-        Shop["Shop.tsx (future)"]
+        Shop["Shop.tsx (side overlay)"]
     end
 
     subgraph Engine["Game Engine (pure TS)"]

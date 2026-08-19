@@ -687,9 +687,11 @@ function drawPowerMeter(ctx: CanvasRenderingContext2D, state: GameState, groundY
   ctx.fillStyle = '#ff000033';
   ctx.fillRect(x, y, w, h * 0.1);
 
-  // Ideal zone
-  const idealCenter = y + h - h * CONFIG.IDEAL_POWER;
-  const zoneH = h * CONFIG.IDEAL_POWER * CONFIG.POWER_TOLERANCE * 2;
+  // Ideal zone — uses difficulty-specific values when available
+  const idealPower = state.difficultyConfig?.idealPower ?? CONFIG.IDEAL_POWER;
+  const powerTol = state.difficultyConfig?.powerTolerance ?? CONFIG.POWER_TOLERANCE;
+  const idealCenter = y + h - h * idealPower;
+  const zoneH = Math.max(4, h * idealPower * powerTol * 2);
   ctx.fillStyle = '#00e5ff44';
   ctx.fillRect(x - 2, idealCenter - zoneH / 2, w + 4, zoneH);
   ctx.strokeStyle = '#00e5ff';
@@ -716,11 +718,16 @@ function drawWindIndicator(ctx: CanvasRenderingContext2D, state: GameState): voi
   if (state.phase !== 'idle' && state.phase !== 'charging') return;
   const cx = state.canvasW / 2;
   const y = 28;
-  ctx.fillStyle = '#ffffffbb';
-  ctx.font = 'bold 13px monospace';
-  ctx.textAlign = 'center';
   const dir = state.wind > 0 ? '→' : '←';
   const strength = Math.abs(state.wind).toFixed(0);
+  const maxWind = state.difficultyConfig?.windRange ?? CONFIG.WIND_RANGE;
+  const intensity = Math.abs(state.wind) / maxWind;
+  // Colour shifts from calm blue → red on hard
+  const r = Math.round(intensity * 230);
+  const g = Math.round((1 - intensity) * 200 + 80);
+  ctx.fillStyle = `rgb(${r},${g},180)`;
+  ctx.font = 'bold 13px monospace';
+  ctx.textAlign = 'center';
   ctx.fillText(`Wind ${dir} ${strength}`, cx, y);
 }
 

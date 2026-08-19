@@ -1,4 +1,26 @@
-export type GamePhase = 'idle' | 'charging' | 'flying' | 'scored' | 'missed' | 'gameover';
+export type GamePhase = 'idle' | 'charging' | 'flying' | 'falling_through' | 'scored' | 'missed' | 'gameover';
+
+export type Difficulty = 'easy' | 'medium' | 'hard';
+
+export interface DifficultyConfig {
+  label: string;
+  description: string;
+  color: string;
+  // Layout
+  playerXRatio: number;
+  hoopXRatio: number;
+  rimWidth: number;
+  backboardExtendTop: number;
+  // Shot window
+  idealPower: number;
+  powerTolerance: number;
+  // Physics
+  gravity: number;
+  restitution: number;
+  windRange: number;
+  chargeDuration: number;
+  groundRestitution: number;
+}
 
 export interface Vec2 {
   x: number;
@@ -64,6 +86,8 @@ export interface GameState {
   feedbackType: 'score' | 'miss' | null;
   activeBackground: BackgroundId;
   bounceCount: number;
+  difficulty: Difficulty;
+  difficultyConfig: DifficultyConfig;
 }
 
 export interface GameCallbacks {

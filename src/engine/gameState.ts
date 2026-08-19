@@ -1,27 +1,29 @@
-import { GameState, Hoop } from '../types/game';
+import { GameState, Hoop, Difficulty, DifficultyConfig } from '../types/game';
 import { CONFIG } from './config';
 import { getActiveBackground } from '../utils/shopData';
+import { DIFFICULTY_CONFIGS } from '../utils/difficultyData';
 
-export function createHoop(canvasW: number, canvasH: number): Hoop {
+function createHoop(canvasW: number, canvasH: number, dc: DifficultyConfig): Hoop {
   const groundY = canvasH * CONFIG.GROUND_Y_RATIO;
   const rimY = groundY - canvasH * 0.38;
-  const backboardX = canvasW * CONFIG.HOOP_X_RATIO;
+  const backboardX = canvasW * dc.hoopXRatio;
   return {
     backboardX,
-    backboardTop: rimY - 70,
+    backboardTop: rimY - dc.backboardExtendTop,
     backboardBottom: rimY + 15,
     rimY,
-    rimLeftX: backboardX - CONFIG.RIM_WIDTH,
+    rimLeftX: backboardX - dc.rimWidth,
     rimRightX: backboardX - 4,
     rimRadius: CONFIG.RIM_RADIUS,
     netBottom: rimY + 45,
   };
 }
 
-export function createInitialState(canvasW: number, canvasH: number): GameState {
+export function createInitialState(canvasW: number, canvasH: number, difficulty: Difficulty = 'medium'): GameState {
+  const dc = DIFFICULTY_CONFIGS[difficulty];
   const groundY = canvasH * CONFIG.GROUND_Y_RATIO;
-  const playerX = canvasW * CONFIG.PLAYER_X_RATIO;
-  const hoop = createHoop(canvasW, canvasH);
+  const playerX = canvasW * dc.playerXRatio;
+  const hoop = createHoop(canvasW, canvasH, dc);
   return {
     phase: 'idle',
     ball: {
@@ -45,6 +47,8 @@ export function createInitialState(canvasW: number, canvasH: number): GameState 
     feedbackType: null,
     activeBackground: getActiveBackground(),
     bounceCount: 0,
+    difficulty,
+    difficultyConfig: dc,
   };
 }
 
@@ -57,7 +61,7 @@ export function resetBall(state: GameState): void {
   state.ball.rotation = 0;
   state.chargePower = 0;
   state.shotTimer = CONFIG.SHOT_TIMER;
-  state.wind = (Math.random() - 0.5) * CONFIG.WIND_RANGE * 2;
+  state.wind = (Math.random() - 0.5) * state.difficultyConfig.windRange * 2;
   state.bounceCount = 0;
   state.phase = 'idle';
 }

@@ -52,7 +52,26 @@
 - [x] Utility modules (math.ts, shopData.ts)
 - [x] 15 new tests (28 total across 4 suites)
 
-## Future Work (Phase 8+)
+## Phase 8: UX & Polish (v0.5.0) ✅
+- [x] Ball fall-through animation (new `falling_through` phase, 0.45s net drop)
+- [x] Fix infinite coins on game over (one-shot save flag in gameLoop)
+- [x] Extend backboard height (70px → 95px above rim)
+- [x] Shop UI as side panel overlay (not full-page modal)
+- [x] Rename tests to snake_case (physics_test, game_state_test, shop_test, math_test)
+- [x] Updated Mermaid diagram, changelog, docs
+
+## Phase 9: Difficulty System & Main Menu (v0.6.0) ✅
+- [x] `DifficultyConfig` type with 10 physics/layout fields
+- [x] `DIFFICULTY_CONFIGS` map (easy / medium / hard) in `src/utils/difficultyData.ts`
+- [x] `createInitialState` accepts `difficulty` param
+- [x] Engine (physics, input, renderer) reads per-difficulty values from `state.difficultyConfig`
+- [x] `MainMenu` component with animated difficulty picker cards
+- [x] `App.tsx` manages `menu | game` screen state
+- [x] HUD difficulty badge + "Menu" button on game over
+- [x] `difficulty_test.ts` — 8 tests (36 total)
+- [x] Updated changelog, Mermaid diagram, active_context, tasks_plan
+
+## Future Work (Phase 10+)
 - [ ] Difficulty scaling (wind increases, timer decreases with streak)
 - [ ] Screen shake on miss
 - [ ] Responsive canvas sizing with ResizeObserver
@@ -63,4 +82,4 @@
 - None.
 
 ## Current Status
-v0.4.0 — All 28 tests pass. Build succeeds. Shop, backgrounds, and gameplay fixes all working.
+v0.6.0 — 36 tests, all passing. Main menu, difficulty system, per-difficulty physics/layout, HUD badge all complete.

@@ -58,7 +58,7 @@ npm run build      # production bundle
 - All art is vector (arc, rect, line) — no image assets needed for v1.
 
 ## Design Patterns
-- **Game State Machine**: `idle → charging → flying → scored/missed → reset → idle`.
+- **Game State Machine**: `idle → charging → flying → falling_through → scored / missed → reset → idle`.
 - **Observer callbacks**: engine emits events consumed by React HUD via shallow-copy callback.
 - **Separation of concerns**: React owns DOM/UI; engine owns canvas + physics. They share state via refs, not re-renders.
 - **Error Boundary**: Class component wraps entire app; catches render errors with friendly recovery UI.

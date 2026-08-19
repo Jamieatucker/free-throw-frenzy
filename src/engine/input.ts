@@ -53,7 +53,8 @@ export function setupInput(
 
 export function updateCharge(state: GameState, dt: number, onAutoFire: () => void): void {
   if (state.phase === 'charging') {
-    state.chargePower = Math.min(1, state.chargePower + dt / CONFIG.CHARGE_DURATION);
+    const duration = state.difficultyConfig?.chargeDuration ?? CONFIG.CHARGE_DURATION;
+    state.chargePower = Math.min(1, state.chargePower + dt / duration);
     if (state.chargePower >= 1) {
       isCharging = false;
       onAutoFire();

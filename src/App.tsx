@@ -2,18 +2,29 @@ import React, { useState, useCallback, useRef } from 'react';
 import GameCanvas from './components/GameCanvas';
 import HUD from './components/HUD';
 import Shop from './components/Shop';
+import MainMenu from './components/MainMenu';
 import ErrorBoundary from './components/ErrorBoundary';
-import { GameState, BackgroundId } from './types/game';
-import { saveHighScore } from './engine/gameState';
-import { saveCoins, getSavedCoins } from './utils/shopData';
+import { GameState, BackgroundId, Difficulty } from './types/game';
+import { getSavedCoins } from './utils/shopData';
 import './styles/index.css';
 
+type Screen = 'menu' | 'game';
+
 const App: React.FC = () => {
+  const [screen, setScreen] = useState<Screen>('menu');
+  const [difficulty, setDifficulty] = useState<Difficulty>('medium');
   const [hudState, setHudState] = useState<GameState | null>(null);
   const [key, setKey] = useState(0);
   const [shopOpen, setShopOpen] = useState(false);
   const [totalCoins, setTotalCoins] = useState(getSavedCoins);
   const gameStateRef = useRef<GameState | null>(null);
+
+  const handleStart = useCallback((diff: Difficulty) => {
+    setDifficulty(diff);
+    setHudState(null);
+    setKey((k) => k + 1);
+    setScreen('game');
+  }, []);
 
   const onStateChange = useCallback((s: GameState) => {
     gameStateRef.current = s;
@@ -24,16 +35,20 @@ const App: React.FC = () => {
       player: { ...s.player },
     });
     if (s.phase === 'gameover') {
-      saveHighScore(s.score);
-      const newTotal = getSavedCoins() + s.currency;
-      saveCoins(newTotal);
-      setTotalCoins(newTotal);
+      setTotalCoins(getSavedCoins());
     }
   }, []);
 
   const onRestart = useCallback(() => {
+    setTotalCoins(getSavedCoins());
     setKey((k) => k + 1);
     setHudState(null);
+  }, []);
+
+  const handleMainMenu = useCallback(() => {
+    setHudState(null);
+    setShopOpen(false);
+    setScreen('menu');
   }, []);
 
   const handleOpenShop = useCallback(() => {
@@ -47,6 +62,14 @@ const App: React.FC = () => {
     }
   }, []);
 
+  if (screen === 'menu') {
+    return (
+      <ErrorBoundary>
+        <MainMenu onStart={handleStart} />
+      </ErrorBoundary>
+    );
+  }
+
   return (
     <ErrorBoundary>
       <div className="min-h-screen bg-gray-900 flex flex-col items-center justify-center p-4">
@@ -54,18 +77,23 @@ const App: React.FC = () => {
           Free Throw Frenzy
         </h1>
         <div className="relative">
-          <GameCanvas key={key} onStateChange={onStateChange} />
-          <HUD state={hudState} onRestart={onRestart} onOpenShop={handleOpenShop} />
+          <GameCanvas key={key} difficulty={difficulty} onStateChange={onStateChange} />
+          <HUD
+            state={hudState}
+            onRestart={onRestart}
+            onOpenShop={handleOpenShop}
+            onMainMenu={handleMainMenu}
+          />
+          {shopOpen && (
+            <Shop
+              coins={totalCoins}
+              onClose={() => setShopOpen(false)}
+              onCoinsChange={(c) => setTotalCoins(c)}
+              onBackgroundChange={handleBackgroundChange}
+            />
+          )}
         </div>
       </div>
-      {shopOpen && (
-        <Shop
-          coins={totalCoins}
-          onClose={() => setShopOpen(false)}
-          onCoinsChange={(c) => setTotalCoins(c)}
-          onBackgroundChange={handleBackgroundChange}
-        />
-      )}
     </ErrorBoundary>
   );
 };
