@@ -2,29 +2,167 @@ import { BackgroundId } from '../types/game';
 import { getAudioContext } from './audio';
 import { isMusicMuted } from '../utils/audioSettings';
 
-interface TrackSpec {
+export type MusicTheme =
+  | 'arena'
+  | 'pastoral'
+  | 'folk'
+  | 'arid'
+  | 'shanty'
+  | 'jungle'
+  | 'urban'
+  | 'ambient';
+
+export type MusicEventType =
+  | 'kick'
+  | 'snare'
+  | 'hat'
+  | 'bass'
+  | 'lead'
+  | 'pad'
+  | 'stab'
+  | 'perc'
+  | 'blip'
+  | 'drone'
+  | 'wind';
+
+export interface MusicEvent {
+  type: MusicEventType;
+  step: number;
+  durBeats: number;
+  midi?: number;
+  gain: number;
+}
+
+export interface TrackSpec {
+  theme: MusicTheme;
   bpm: number;
   bars: number;
+  stepsPerBar: number;
   root: number;
   scale: number[];
   bassWave: OscillatorType;
   leadWave: OscillatorType;
   filterHz: number;
-  swing: number;
   drums: boolean;
   pad: boolean;
-  tension: number;
 }
 
+export const STAGE_THEMES: Record<BackgroundId, MusicTheme> = {
+  stadium: 'arena',
+  park: 'pastoral',
+  farm: 'folk',
+  desert: 'arid',
+  pirate: 'shanty',
+  amazon: 'jungle',
+  rooftop: 'urban',
+  space: 'ambient',
+};
+
 const TRACKS: Record<BackgroundId, TrackSpec> = {
-  stadium: { bpm: 100, bars: 4, root: 55, scale: [0, 3, 5, 7, 10], bassWave: 'square', leadWave: 'sawtooth', filterHz: 1400, swing: 0.08, drums: true, pad: true, tension: 0.7 },
-  park: { bpm: 108, bars: 4, root: 60, scale: [0, 2, 4, 7, 9], bassWave: 'triangle', leadWave: 'sine', filterHz: 1800, swing: 0.04, drums: true, pad: false, tension: 0.45 },
-  farm: { bpm: 86, bars: 4, root: 57, scale: [0, 2, 4, 7, 11], bassWave: 'triangle', leadWave: 'triangle', filterHz: 1200, swing: 0.12, drums: false, pad: true, tension: 0.35 },
-  desert: { bpm: 76, bars: 4, root: 58, scale: [0, 2, 3, 7, 9], bassWave: 'sine', leadWave: 'sine', filterHz: 900, swing: 0, drums: false, pad: true, tension: 0.55 },
-  pirate: { bpm: 102, bars: 4, root: 50, scale: [0, 3, 5, 7, 10], bassWave: 'square', leadWave: 'triangle', filterHz: 1100, swing: 0.1, drums: true, pad: false, tension: 0.65 },
-  amazon: { bpm: 114, bars: 4, root: 53, scale: [0, 2, 5, 7, 10], bassWave: 'triangle', leadWave: 'sawtooth', filterHz: 1600, swing: 0.06, drums: true, pad: true, tension: 0.6 },
-  rooftop: { bpm: 94, bars: 4, root: 48, scale: [0, 3, 5, 7, 10], bassWave: 'square', leadWave: 'sawtooth', filterHz: 1300, swing: 0.14, drums: true, pad: true, tension: 0.75 },
-  space: { bpm: 68, bars: 4, root: 46, scale: [0, 2, 4, 7, 11], bassWave: 'sine', leadWave: 'sine', filterHz: 700, swing: 0, drums: false, pad: true, tension: 0.85 },
+  stadium: {
+    theme: 'arena',
+    bpm: 100,
+    bars: 4,
+    stepsPerBar: 16,
+    root: 55,
+    scale: [0, 3, 5, 7, 10],
+    bassWave: 'square',
+    leadWave: 'sawtooth',
+    filterHz: 1600,
+    drums: true,
+    pad: true,
+  },
+  park: {
+    theme: 'pastoral',
+    bpm: 112,
+    bars: 4,
+    stepsPerBar: 16,
+    root: 64,
+    scale: [0, 2, 4, 7, 9],
+    bassWave: 'triangle',
+    leadWave: 'sine',
+    filterHz: 2200,
+    drums: true,
+    pad: false,
+  },
+  farm: {
+    theme: 'folk',
+    bpm: 84,
+    bars: 4,
+    stepsPerBar: 16,
+    root: 57,
+    scale: [0, 2, 4, 7, 11],
+    bassWave: 'triangle',
+    leadWave: 'triangle',
+    filterHz: 1100,
+    drums: false,
+    pad: true,
+  },
+  desert: {
+    theme: 'arid',
+    bpm: 72,
+    bars: 4,
+    stepsPerBar: 16,
+    root: 58,
+    scale: [0, 1, 4, 7, 8],
+    bassWave: 'sine',
+    leadWave: 'sine',
+    filterHz: 800,
+    drums: false,
+    pad: true,
+  },
+  pirate: {
+    theme: 'shanty',
+    bpm: 96,
+    bars: 4,
+    stepsPerBar: 12,
+    root: 50,
+    scale: [0, 3, 5, 7, 10],
+    bassWave: 'square',
+    leadWave: 'triangle',
+    filterHz: 1050,
+    drums: true,
+    pad: false,
+  },
+  amazon: {
+    theme: 'jungle',
+    bpm: 118,
+    bars: 4,
+    stepsPerBar: 16,
+    root: 53,
+    scale: [0, 2, 5, 7, 10],
+    bassWave: 'triangle',
+    leadWave: 'sawtooth',
+    filterHz: 1900,
+    drums: true,
+    pad: true,
+  },
+  rooftop: {
+    theme: 'urban',
+    bpm: 90,
+    bars: 4,
+    stepsPerBar: 16,
+    root: 46,
+    scale: [0, 3, 5, 7, 10],
+    bassWave: 'square',
+    leadWave: 'sawtooth',
+    filterHz: 1250,
+    drums: true,
+    pad: true,
+  },
+  space: {
+    theme: 'ambient',
+    bpm: 60,
+    bars: 4,
+    stepsPerBar: 16,
+    root: 45,
+    scale: [0, 2, 6, 7, 11],
+    bassWave: 'sine',
+    leadWave: 'sine',
+    filterHz: 620,
+    drums: false,
+    pad: true,
+  },
 };
 
 let currentId: BackgroundId | null = null;
@@ -38,9 +176,174 @@ function midiToFreq(midi: number): number {
 }
 
 function loopDuration(spec: TrackSpec): number {
-  const beats = spec.bars * 4;
-  const seconds = (beats * 60) / spec.bpm;
+  const beatsPerBar = spec.stepsPerBar === 12 ? 3 : 4;
+  const seconds = (spec.bars * beatsPerBar * 60) / spec.bpm;
   return Math.min(25, seconds);
+}
+
+function push(
+  events: MusicEvent[],
+  type: MusicEventType,
+  step: number,
+  durBeats: number,
+  midi?: number,
+  gain = 0.2
+): void {
+  events.push({ type, step, durBeats, midi, gain });
+}
+
+function degree(spec: TrackSpec, i: number): number {
+  return spec.scale[i % spec.scale.length];
+}
+
+function buildArena(spec: TrackSpec, total: number): MusicEvent[] {
+  const events: MusicEvent[] = [];
+  for (let s = 0; s < total; s++) {
+    const barStep = s % spec.stepsPerBar;
+    if (barStep === 0 || barStep === 8) {
+      push(events, 'kick', s, 0.45, undefined, 0.5);
+      push(events, 'stab', s, 0.9, spec.root + 7, 0.18);
+      push(events, 'stab', s, 0.9, spec.root + 12, 0.12);
+    }
+    if (barStep === 4 || barStep === 12) push(events, 'snare', s, 0.2, undefined, 0.16);
+    if (barStep % 4 === 2) push(events, 'hat', s, 0.08, undefined, 0.06);
+    if (barStep === 0) push(events, 'bass', s, 1.5, spec.root - 12, 0.28);
+    if (barStep === 8) push(events, 'bass', s, 1.2, spec.root + degree(spec, 2) - 12, 0.22);
+  }
+  push(events, 'pad', 0, spec.bars * 4, spec.root + 3, 0.06);
+  return events;
+}
+
+function buildPastoral(spec: TrackSpec, total: number): MusicEvent[] {
+  const events: MusicEvent[] = [];
+  for (let s = 0; s < total; s++) {
+    const barStep = s % spec.stepsPerBar;
+    if (barStep === 0) push(events, 'kick', s, 0.3, undefined, 0.32);
+    if (barStep === 8) push(events, 'hat', s, 0.1, undefined, 0.07);
+    if (barStep === 0 || barStep === 6 || barStep === 10) {
+      push(events, 'lead', s, 0.55, spec.root + degree(spec, s) + 12, 0.14);
+    }
+    if (barStep === 4) push(events, 'blip', s, 0.12, spec.root + 24 + degree(spec, s), 0.08);
+    if (barStep === 0) push(events, 'bass', s, 1.8, spec.root - 12, 0.18);
+  }
+  return events;
+}
+
+function buildFolk(spec: TrackSpec, total: number): MusicEvent[] {
+  const events: MusicEvent[] = [];
+  for (let s = 0; s < total; s++) {
+    const barStep = s % spec.stepsPerBar;
+    if (barStep === 0) {
+      push(events, 'bass', s, 2, spec.root - 12, 0.2);
+      push(events, 'lead', s, 1.4, spec.root + 7, 0.12);
+    }
+    if (barStep === 8) push(events, 'lead', s, 1.1, spec.root + degree(spec, 2), 0.11);
+    if (barStep === 4 || barStep === 12) push(events, 'lead', s, 0.7, spec.root + degree(spec, s), 0.1);
+  }
+  push(events, 'pad', 0, spec.bars * 4, spec.root + 4, 0.05);
+  return events;
+}
+
+function buildArid(spec: TrackSpec, total: number): MusicEvent[] {
+  const events: MusicEvent[] = [];
+  push(events, 'wind', 0, spec.bars * 4, undefined, 0.05);
+  push(events, 'drone', 0, spec.bars * 4, spec.root - 12, 0.08);
+  for (let s = 0; s < total; s++) {
+    const barStep = s % spec.stepsPerBar;
+    if (barStep === 0 && s % 32 === 0) {
+      push(events, 'lead', s, 3.2, spec.root + 12 + degree(spec, 0), 0.1);
+    }
+    if (barStep === 10 && s % 32 === 10) {
+      push(events, 'lead', s, 2.4, spec.root + 7, 0.08);
+    }
+  }
+  push(events, 'pad', 0, spec.bars * 4, spec.root + 1, 0.04);
+  return events;
+}
+
+function buildShanty(spec: TrackSpec, total: number): MusicEvent[] {
+  const events: MusicEvent[] = [];
+  for (let s = 0; s < total; s++) {
+    const barStep = s % spec.stepsPerBar;
+    if (barStep === 0 || barStep === 6) push(events, 'kick', s, 0.35, undefined, 0.42);
+    if (barStep === 3 || barStep === 9) push(events, 'snare', s, 0.18, undefined, 0.14);
+    if (barStep % 3 === 0) push(events, 'hat', s, 0.07, undefined, 0.05);
+    if (barStep === 0) push(events, 'bass', s, 1.4, spec.root - 12, 0.26);
+    if (barStep === 4) push(events, 'lead', s, 0.6, spec.root + 7, 0.13);
+    if (barStep === 6) push(events, 'lead', s, 0.5, spec.root + 10, 0.12);
+    if (barStep === 8) push(events, 'lead', s, 0.9, spec.root + 12, 0.14);
+  }
+  return events;
+}
+
+function buildJungle(spec: TrackSpec, total: number): MusicEvent[] {
+  const events: MusicEvent[] = [];
+  for (let s = 0; s < total; s++) {
+    const barStep = s % spec.stepsPerBar;
+    if (barStep === 0 || barStep === 3 || barStep === 6 || barStep === 10) {
+      push(events, 'perc', s, 0.12, spec.root - 24 + (barStep % 5), 0.16);
+    }
+    if (barStep === 0 || barStep === 8) push(events, 'kick', s, 0.28, undefined, 0.4);
+    if (barStep === 4 || barStep === 11) push(events, 'snare', s, 0.14, undefined, 0.12);
+    if (barStep % 2 === 1) push(events, 'hat', s, 0.06, undefined, 0.05);
+    if (barStep === 0) push(events, 'bass', s, 0.9, spec.root - 12, 0.22);
+    if (barStep === 5) push(events, 'lead', s, 0.35, spec.root + degree(spec, s) + 12, 0.11);
+  }
+  push(events, 'pad', 0, spec.bars * 4, spec.root + 10, 0.05);
+  return events;
+}
+
+function buildUrban(spec: TrackSpec, total: number): MusicEvent[] {
+  const events: MusicEvent[] = [];
+  for (let s = 0; s < total; s++) {
+    const barStep = s % spec.stepsPerBar;
+    if (barStep === 0 || barStep === 10) push(events, 'kick', s, 0.4, undefined, 0.48);
+    if (barStep === 4 || barStep === 12) push(events, 'snare', s, 0.22, undefined, 0.18);
+    if (barStep === 2 || barStep === 6 || barStep === 14) push(events, 'hat', s, 0.08, undefined, 0.07);
+    if (barStep === 0 || barStep === 7) push(events, 'bass', s, 0.85, spec.root + degree(spec, barStep === 7 ? 3 : 0) - 12, 0.3);
+    if (barStep === 8) push(events, 'lead', s, 0.7, spec.root + 15, 0.1);
+  }
+  push(events, 'pad', 0, spec.bars * 4, spec.root + 3, 0.07);
+  return events;
+}
+
+function buildAmbient(spec: TrackSpec, total: number): MusicEvent[] {
+  const events: MusicEvent[] = [];
+  push(events, 'drone', 0, spec.bars * 4, spec.root - 12, 0.1);
+  push(events, 'pad', 0, spec.bars * 4, spec.root + 6, 0.08);
+  push(events, 'pad', 0, spec.bars * 4, spec.root + 11, 0.05);
+  for (let s = 0; s < total; s++) {
+    const barStep = s % spec.stepsPerBar;
+    if (barStep === 0 && s % 16 === 0) {
+      push(events, 'blip', s, 0.4, spec.root + 24 + degree(spec, s / 16), 0.07);
+    }
+    if (barStep === 12 && s % 32 === 12) {
+      push(events, 'lead', s, 2.8, spec.root + 12 + 6, 0.06);
+    }
+  }
+  return events;
+}
+
+const ARRANGERS: Record<MusicTheme, (spec: TrackSpec, total: number) => MusicEvent[]> = {
+  arena: buildArena,
+  pastoral: buildPastoral,
+  folk: buildFolk,
+  arid: buildArid,
+  shanty: buildShanty,
+  jungle: buildJungle,
+  urban: buildUrban,
+  ambient: buildAmbient,
+};
+
+export function buildArrangement(spec: TrackSpec): MusicEvent[] {
+  const total = spec.bars * spec.stepsPerBar;
+  return ARRANGERS[spec.theme](spec, total);
+}
+
+export function arrangementFingerprint(spec: TrackSpec): string {
+  return buildArrangement(spec)
+    .map((e) => `${e.type}:${e.step}:${e.midi ?? ''}:${e.durBeats}`)
+    .join('|');
 }
 
 function scheduleTone(
@@ -55,16 +358,24 @@ function scheduleTone(
   const osc = ctx.createOscillator();
   const g = ctx.createGain();
   osc.type = type;
-  osc.frequency.setValueAtTime(freq, time);
+  osc.frequency.setValueAtTime(Math.max(20, freq), time);
   g.gain.setValueAtTime(0.0001, time);
-  g.gain.exponentialRampToValueAtTime(Math.max(0.001, gain), time + Math.min(0.03, dur * 0.2));
+  g.gain.exponentialRampToValueAtTime(Math.max(0.001, gain), time + Math.min(0.04, dur * 0.2));
   g.gain.exponentialRampToValueAtTime(0.0001, time + dur);
   osc.connect(g).connect(dest);
   osc.start(time);
-  osc.stop(time + dur + 0.02);
+  osc.stop(time + dur + 0.03);
 }
 
-function addNoiseHit(ctx: BaseAudioContext, dest: AudioNode, time: number, dur: number, freq: number, gain: number): void {
+function addNoiseHit(
+  ctx: BaseAudioContext,
+  dest: AudioNode,
+  time: number,
+  dur: number,
+  freq: number,
+  gain: number,
+  type: BiquadFilterType = 'bandpass'
+): void {
   const frames = Math.max(1, Math.floor(ctx.sampleRate * dur));
   const buffer = ctx.createBuffer(1, frames, ctx.sampleRate);
   const data = buffer.getChannelData(0);
@@ -72,7 +383,7 @@ function addNoiseHit(ctx: BaseAudioContext, dest: AudioNode, time: number, dur: 
   const src = ctx.createBufferSource();
   src.buffer = buffer;
   const filter = ctx.createBiquadFilter();
-  filter.type = 'bandpass';
+  filter.type = type;
   filter.frequency.value = freq;
   const g = ctx.createGain();
   g.gain.setValueAtTime(gain, time);
@@ -90,47 +401,45 @@ export function renderTrackBuffer(ctx: OfflineAudioContext, spec: TrackSpec): vo
   filter.frequency.value = spec.filterHz;
   master.connect(filter).connect(ctx.destination);
 
-  const beat = 60 / spec.bpm;
-  const steps = spec.bars * 16;
+  const stepSec = loopDuration(spec) / (spec.bars * spec.stepsPerBar);
   const duration = loopDuration(spec);
 
-  for (let i = 0; i < steps; i++) {
-    const swing = i % 2 === 1 ? spec.swing * beat : 0;
-    const t = Math.min(duration - 0.05, (i / 4) * beat + swing);
-    const stepInBar = i % 16;
-    const degree = spec.scale[i % spec.scale.length];
-    const octave = i % 32 < 16 ? 0 : 12;
-
-    if (spec.drums) {
-      if (stepInBar === 0 || stepInBar === 8) {
-        scheduleTone(ctx, master, t, 0.18, 70 + spec.tension * 20, 'sine', 0.55);
-      }
-      if (stepInBar === 4 || stepInBar === 12) {
-        addNoiseHit(ctx, master, t, 0.08, 1800, 0.12);
-      }
-      if (stepInBar % 2 === 0) {
-        addNoiseHit(ctx, master, t, 0.03, 6000, 0.05);
-      }
+  for (const ev of buildArrangement(spec)) {
+    const t = Math.min(duration - 0.06, ev.step * stepSec);
+    const dur = Math.min(duration - t - 0.02, ev.durBeats * (60 / spec.bpm));
+    const freq = ev.midi !== undefined ? midiToFreq(ev.midi) : 80;
+    switch (ev.type) {
+      case 'kick':
+        scheduleTone(ctx, master, t, dur, 68, 'sine', ev.gain);
+        break;
+      case 'snare':
+        addNoiseHit(ctx, master, t, dur, 1800, ev.gain);
+        break;
+      case 'hat':
+        addNoiseHit(ctx, master, t, dur, 7000, ev.gain, 'highpass');
+        break;
+      case 'perc':
+        addNoiseHit(ctx, master, t, dur, 420 + (ev.midi ?? 0) * 8, ev.gain);
+        scheduleTone(ctx, master, t, dur * 0.7, freq, 'triangle', ev.gain * 0.5);
+        break;
+      case 'wind':
+        addNoiseHit(ctx, master, t, dur, 900, ev.gain, 'lowpass');
+        break;
+      case 'stab':
+        scheduleTone(ctx, master, t, dur, freq, 'sawtooth', ev.gain);
+        break;
+      case 'bass':
+        scheduleTone(ctx, master, t, dur, freq, spec.bassWave, ev.gain);
+        break;
+      case 'lead':
+      case 'blip':
+        scheduleTone(ctx, master, t, dur, freq, spec.leadWave, ev.gain);
+        break;
+      case 'pad':
+      case 'drone':
+        scheduleTone(ctx, master, t, dur, freq, 'sine', ev.gain);
+        break;
     }
-
-    if (stepInBar === 0 || stepInBar === 8) {
-      const bass = midiToFreq(spec.root + spec.scale[0] - 12);
-      scheduleTone(ctx, master, t, beat * 1.6, bass, spec.bassWave, 0.28);
-    } else if (stepInBar === 4 || stepInBar === 12) {
-      const bass2 = midiToFreq(spec.root + spec.scale[2 % spec.scale.length] - 12);
-      scheduleTone(ctx, master, t, beat * 1.1, bass2, spec.bassWave, 0.2);
-    }
-
-    if (i % 2 === 0) {
-      const lead = midiToFreq(spec.root + degree + octave);
-      scheduleTone(ctx, master, t, beat * 0.45, lead, spec.leadWave, 0.09 + spec.tension * 0.06);
-    }
-  }
-
-  if (spec.pad) {
-    const padFreq = midiToFreq(spec.root + spec.scale[2] + 12);
-    scheduleTone(ctx, master, 0.01, duration - 0.05, padFreq, 'sine', 0.07 + spec.tension * 0.04);
-    scheduleTone(ctx, master, 0.01, duration - 0.05, midiToFreq(spec.root), 'triangle', 0.05);
   }
 }
 
@@ -141,7 +450,9 @@ async function getBuffer(id: BackgroundId): Promise<AudioBuffer | null> {
   if (!live) return null;
   const spec = TRACKS[id];
   const duration = loopDuration(spec);
-  const Offline = window.OfflineAudioContext || (window as unknown as { webkitOfflineAudioContext?: typeof OfflineAudioContext }).webkitOfflineAudioContext;
+  const Offline =
+    window.OfflineAudioContext ||
+    (window as unknown as { webkitOfflineAudioContext?: typeof OfflineAudioContext }).webkitOfflineAudioContext;
   if (!Offline) return null;
   const offline = new Offline(2, Math.floor(live.sampleRate * duration), live.sampleRate);
   renderTrackBuffer(offline, spec);
@@ -154,10 +465,14 @@ function stopSource(): void {
   if (sourceNode) {
     try {
       sourceNode.stop();
-    } catch {}
+    } catch {
+      /* already stopped */
+    }
     try {
       sourceNode.disconnect();
-    } catch {}
+    } catch {
+      /* already disconnected */
+    }
     sourceNode = null;
   }
 }
@@ -216,4 +531,12 @@ export function getTrackDuration(id: BackgroundId): number {
 
 export function getTrackSpec(id: BackgroundId): TrackSpec {
   return TRACKS[id];
+}
+
+export function getStageTheme(id: BackgroundId): MusicTheme {
+  return STAGE_THEMES[id];
+}
+
+export function countEventType(spec: TrackSpec, type: MusicEventType): number {
+  return buildArrangement(spec).filter((e) => e.type === type).length;
 }

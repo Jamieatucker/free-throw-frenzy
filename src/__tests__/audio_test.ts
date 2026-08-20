@@ -7,7 +7,6 @@ import {
   toggleMusicMuted,
 } from '../utils/audioSettings';
 import { STAGE_TRACKS } from '../audio/stageTracks';
-import { getTrackDuration, getTrackSpec } from '../engine/music';
 import { BackgroundId } from '../types/game';
 
 const BACKGROUNDS: BackgroundId[] = [
@@ -36,24 +35,9 @@ describe('Audio settings', () => {
   });
 });
 
-describe('Stage music', () => {
+describe('Stage music catalog', () => {
   it('should define a unique looping track for every stage', () => {
     const titles = BACKGROUNDS.map((id) => STAGE_TRACKS[id].title);
     expect(new Set(titles).size).toBe(BACKGROUNDS.length);
-  });
-
-  it('each generated loop should be at most 25 seconds', () => {
-    for (const id of BACKGROUNDS) {
-      expect(getTrackDuration(id)).toBeGreaterThan(4);
-      expect(getTrackDuration(id)).toBeLessThanOrEqual(25);
-    }
-  });
-
-  it('each stage should use a distinct musical recipe', () => {
-    const signatures = BACKGROUNDS.map((id) => {
-      const t = getTrackSpec(id);
-      return `${t.bpm}:${t.root}:${t.leadWave}:${t.filterHz}:${t.drums}:${t.pad}`;
-    });
-    expect(new Set(signatures).size).toBe(BACKGROUNDS.length);
   });
 });

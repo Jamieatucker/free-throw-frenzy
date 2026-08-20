@@ -6,7 +6,7 @@
 
 ### Added
 - **Pause menu**: Overlay from a non-blocking pause button (bottom-right) or Esc. Toggle SFX, mute music, resume, or return to the main menu to change difficulty.
-- **Stage music**: Unique looping background track per court (≤ 25s), generated in `src/engine/music.ts` / `src/audio/stageTracks.ts`. Music follows the equipped background and loops for the whole game.
+- **Stage music**: Unique looping background track per court (≤ 25s). Each stage has a theme-specific arrangement (arena stabs, pastoral chirps, folk fifths, desert wind, pirate 6/8 shanty, jungle perc, urban boom-bap, space drones).
 
 ## [0.7.2] — 2026-08-20
 ### Fixed
