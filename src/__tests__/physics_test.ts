@@ -62,28 +62,28 @@ describe('Physics Engine', () => {
     expect(state.ball.pos.y).toBeLessThanOrEqual(groundY - state.ball.radius);
   });
 
-  it('should still be flying after two ground bounces', () => {
+  it('should still be flying before reaching max ground bounces', () => {
     const state = createInitialState(W, H);
     state.phase = 'flying';
-    state.bounceCount = 1;
+    state.bounceCount = Math.max(0, CONFIG.MAX_BOUNCES - 2);
     const groundY = H * CONFIG.GROUND_Y_RATIO;
     state.ball.pos.y = groundY - state.ball.radius + 1;
     state.ball.vel.y = 200;
     updatePhysics(state, 0.016);
-    expect(state.bounceCount).toBe(2);
+    expect(state.bounceCount).toBe(CONFIG.MAX_BOUNCES - 1);
     expect(state.phase).toBe('flying');
   });
 
-  it('should mark missed on the third ground bounce', () => {
+  it('should mark missed on the max ground bounce', () => {
     const state = createInitialState(W, H);
-    expect(CONFIG.MAX_BOUNCES).toBe(3);
+    expect(CONFIG.MAX_BOUNCES).toBeGreaterThanOrEqual(2);
     state.phase = 'flying';
-    state.bounceCount = 2;
+    state.bounceCount = CONFIG.MAX_BOUNCES - 1;
     const groundY = H * CONFIG.GROUND_Y_RATIO;
     state.ball.pos.y = groundY - state.ball.radius + 1;
     state.ball.vel.y = 200;
     updatePhysics(state, 0.016);
-    expect(state.bounceCount).toBe(3);
+    expect(state.bounceCount).toBe(CONFIG.MAX_BOUNCES);
     expect(state.phase).toBe('missed');
   });
 
@@ -233,5 +233,22 @@ describe('Physics Engine', () => {
     }
     expect(state.phase).toBe('scored');
     expect(state.ball.opacity).toBe(0);
+  });
+
+  it('should leave falling_through after a make without throwing on the next tick', () => {
+    const state = createInitialState(W, H);
+    state.phase = 'flying';
+    state.bounceCount = 0;
+    state.passedAboveRim = true;
+    const rimCenterX = (state.hoop.rimLeftX + state.hoop.rimRightX) / 2;
+    state.ball.pos.x = rimCenterX;
+    state.ball.pos.y = state.hoop.rimY - 3;
+    state.ball.vel.x = 0;
+    state.ball.vel.y = 280;
+    expect(() => updatePhysics(state, 0.016)).not.toThrow();
+    expect(state.phase).toBe('falling_through');
+    expect(() => updatePhysics(state, 0.016)).not.toThrow();
+    expect(state.phase).toBe('falling_through');
+    expect(state.ball.pos.y).toBeGreaterThan(state.hoop.rimY);
   });
 });

@@ -8,9 +8,10 @@ interface Props {
   onRestart: () => void;
   onOpenShop: () => void;
   onMainMenu: () => void;
+  onPause: () => void;
 }
 
-const HUD: React.FC<Props> = ({ state, onRestart, onOpenShop, onMainMenu }) => {
+const HUD: React.FC<Props> = ({ state, onRestart, onOpenShop, onMainMenu, onPause }) => {
   if (!state) return null;
 
   const timerColor =
@@ -99,7 +100,7 @@ const HUD: React.FC<Props> = ({ state, onRestart, onOpenShop, onMainMenu }) => {
       )}
 
       {/* First shot hint */}
-      {state.phase === 'idle' && state.score === 0 && state.feedbackTimer <= 0 && (
+      {state.phase === 'idle' && !state.paused && state.score === 0 && state.feedbackTimer <= 0 && (
         <div className="flex-1 flex items-end justify-center pb-8">
           <div className="bg-black/50 rounded-lg px-6 py-3 backdrop-blur-sm text-center">
             <div className="text-white text-sm">
@@ -108,6 +109,18 @@ const HUD: React.FC<Props> = ({ state, onRestart, onOpenShop, onMainMenu }) => {
             <div className="text-gray-400 text-xs mt-1">On mobile: tap and hold the screen</div>
           </div>
         </div>
+      )}
+
+      {state.phase !== 'gameover' && (
+        <button
+          type="button"
+          onClick={onPause}
+          aria-label="Pause game"
+          title="Pause (Esc)"
+          className="absolute bottom-3 right-3 pointer-events-auto w-11 h-11 rounded-full bg-black/55 hover:bg-black/75 border border-white/20 text-white text-lg backdrop-blur-sm shadow-lg flex items-center justify-center transition-colors"
+        >
+          ❚❚
+        </button>
       )}
     </div>
   );

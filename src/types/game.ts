@@ -101,6 +101,7 @@ export interface GameState {
   netSwish: number;
   /** True once the ball has been fully above the rim this shot (before any ground bounce). */
   passedAboveRim: boolean;
+  paused: boolean;
 }
 
 export interface GameCallbacks {

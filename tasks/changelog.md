@@ -1,5 +1,13 @@
 # Changelog — Free Throw Frenzy
 
+## [0.8.0] — 2026-08-20
+### Fixed
+- **Physics phase error**: Scoring no longer compares a TypeScript-narrowed `phase === 'flying'` against `'falling_through'`. `checkScore` returns a boolean and the flying tick exits immediately on a make.
+
+### Added
+- **Pause menu**: Overlay from a non-blocking pause button (bottom-right) or Esc. Toggle SFX, mute music, resume, or return to the main menu to change difficulty.
+- **Stage music**: Unique looping background track per court (≤ 25s), generated in `src/engine/music.ts` / `src/audio/stageTracks.ts`. Music follows the equipped background and loops for the whole game.
+
 ## [0.7.2] — 2026-08-20
 ### Fixed
 - **Swish animation**: After a make the ball keeps falling through the net (no snap-to-center freeze), then fades out instead of hanging mid-air until the next shot.

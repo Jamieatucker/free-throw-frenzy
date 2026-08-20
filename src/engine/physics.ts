@@ -91,8 +91,7 @@ export function updatePhysics(state: GameState, dt: number): void {
     state.passedAboveRim = true;
   }
 
-  checkScore(state);
-  if (state.phase === 'falling_through') return;
+  if (checkScore(state)) return;
 
   if (!isPassingThroughRim(state)) {
     checkRimCollision(state);
@@ -202,8 +201,8 @@ function checkGroundBounce(state: GameState): void {
   }
 }
 
-function checkScore(state: GameState): void {
-  if (!isRimEntryFromAbove(state)) return;
+function checkScore(state: GameState): boolean {
+  if (!isRimEntryFromAbove(state)) return false;
 
   state.score += state.multiplier;
   state.streak += 1;
@@ -217,6 +216,7 @@ function checkScore(state: GameState): void {
 
   const shift = Math.min(state.streak * 8, state.canvasW * 0.15);
   state.player.x = state.player.baseX + shift;
+  return true;
 }
 
 /** Ball is currently dropping through the rim cylinder (already counted a make). */

@@ -1,5 +1,6 @@
 import { GameState } from '../types/game';
 import { CONFIG } from './config';
+import { setPaused } from './gameState';
 
 let isCharging = false;
 
@@ -11,6 +12,7 @@ export function setupInput(
   const onDown = (e: Event) => {
     e.preventDefault();
     const state = getState();
+    if (state.paused || state.phase === 'gameover') return;
     if (state.phase === 'idle') {
       state.phase = 'charging';
       state.chargePower = 0;
@@ -21,6 +23,7 @@ export function setupInput(
   const onUp = (e: Event) => {
     e.preventDefault();
     const state = getState();
+    if (state.paused) return;
     if (state.phase === 'charging' && isCharging) {
       isCharging = false;
       onRelease();
@@ -28,6 +31,14 @@ export function setupInput(
   };
 
   const keyDown = (e: KeyboardEvent) => {
+    if (e.code === 'Escape') {
+      e.preventDefault();
+      const state = getState();
+      if (state.phase !== 'gameover') {
+        setPaused(state, !state.paused);
+      }
+      return;
+    }
     if (e.code === 'Space' && !e.repeat) onDown(e);
   };
   const keyUp = (e: KeyboardEvent) => {
@@ -52,6 +63,7 @@ export function setupInput(
 }
 
 export function updateCharge(state: GameState, dt: number, onAutoFire: () => void): void {
+  if (state.paused) return;
   if (state.phase === 'charging') {
     const duration = state.difficultyConfig?.chargeDuration ?? CONFIG.CHARGE_DURATION;
     state.chargePower = Math.min(1, state.chargePower + dt / duration);

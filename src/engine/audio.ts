@@ -1,11 +1,14 @@
+import { isSfxMuted } from '../utils/audioSettings';
+
 type SoundName = 'shoot' | 'score' | 'miss' | 'bounce';
 
 let audioCtx: AudioContext | null = null;
 
-function getCtx(): AudioContext | null {
+export function getAudioContext(): AudioContext | null {
   if (!audioCtx) {
     try {
-      audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)();
+      const Ctx = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
+      audioCtx = new Ctx();
     } catch {
       return null;
     }
@@ -17,7 +20,7 @@ function getCtx(): AudioContext | null {
 }
 
 function playTone(freq: number, duration: number, type: OscillatorType, gain: number, ramp = true) {
-  const ctx = getCtx();
+  const ctx = getAudioContext();
   if (!ctx) return;
   const osc = ctx.createOscillator();
   const g = ctx.createGain();
@@ -31,7 +34,7 @@ function playTone(freq: number, duration: number, type: OscillatorType, gain: nu
 }
 
 function playNoise(duration: number, gain: number) {
-  const ctx = getCtx();
+  const ctx = getAudioContext();
   if (!ctx) return;
   const bufferSize = ctx.sampleRate * duration;
   const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
@@ -50,6 +53,7 @@ function playNoise(duration: number, gain: number) {
 }
 
 export function playSound(name: SoundName): void {
+  if (isSfxMuted()) return;
   switch (name) {
     case 'shoot':
       playNoise(0.15, 0.25);

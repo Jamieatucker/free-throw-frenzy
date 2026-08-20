@@ -25,7 +25,7 @@ export function startGameLoop(
     const dt = Math.min(rawDt, 0.05);
     lastTime = now;
 
-    update(state, dt);
+    updateGame(state, dt);
     render(ctx, state);
     callbacks.onStateChange(state);
     animId = requestAnimationFrame(tick);
@@ -39,7 +39,9 @@ export function startGameLoop(
   };
 }
 
-function update(state: GameState, dt: number): void {
+export function updateGame(state: GameState, dt: number): void {
+  if (state.paused) return;
+
   if (state.phase === 'gameover') {
     if (!gameOverSaved) {
       gameOverSaved = true;
@@ -79,6 +81,7 @@ function update(state: GameState, dt: number): void {
 }
 
 export function handleRelease(state: GameState): void {
+  if (state.paused) return;
   if (state.phase === 'charging') {
     launchBall(state);
   }

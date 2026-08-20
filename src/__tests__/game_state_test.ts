@@ -26,6 +26,7 @@ describe('GameState', () => {
     expect(state.netSwish).toBe(0);
     expect(state.passedAboveRim).toBe(false);
     expect(state.ball.opacity).toBe(1);
+    expect(state.paused).toBe(false);
   });
 
   it('should carry difficulty config into state', () => {

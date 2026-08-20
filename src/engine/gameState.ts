@@ -55,6 +55,7 @@ export function createInitialState(canvasW: number, canvasH: number, difficulty:
     camera: createCamera(),
     netSwish: 0,
     passedAboveRim: false,
+    paused: false,
   };
 }
 
@@ -75,6 +76,15 @@ export function resetBall(state: GameState): void {
   resetCamera(state.camera);
   state.netSwish = 0;
   state.passedAboveRim = false;
+}
+
+export function setPaused(state: GameState, paused: boolean): void {
+  if (state.phase === 'gameover') return;
+  state.paused = paused;
+  if (paused && state.phase === 'charging') {
+    state.phase = 'idle';
+    state.chargePower = 0;
+  }
 }
 
 export function getHighScore(): number {
