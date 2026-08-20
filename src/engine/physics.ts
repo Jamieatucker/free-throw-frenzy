@@ -63,6 +63,9 @@ export function launchBall(state: GameState): void {
 
   state.phase = 'flying';
   state.bounceCount = 0;
+  state.passedAboveRim = false;
+  state.ball.opacity = 1;
+  state.ball.prevY = state.ball.pos.y;
   playSound('shoot');
 }
 
@@ -76,6 +79,7 @@ export function updatePhysics(state: GameState, dt: number): void {
   const dc = state.difficultyConfig;
   const ball = state.ball;
 
+  ball.prevY = ball.pos.y;
   ball.vel.y += dc.gravity * dt;
   ball.vel.x += state.wind * dt;
 
@@ -83,25 +87,47 @@ export function updatePhysics(state: GameState, dt: number): void {
   ball.pos.y += ball.vel.y * dt;
   ball.rotation += ball.vel.x * dt * 0.05;
 
-  checkRimCollision(state);
-  checkBackboardCollision(state);
+  if (state.bounceCount === 0 && ball.pos.y + ball.radius < state.hoop.rimY) {
+    state.passedAboveRim = true;
+  }
+
   checkScore(state);
+  if (state.phase === 'falling_through') return;
+
+  if (!isPassingThroughRim(state)) {
+    checkRimCollision(state);
+  }
+  checkBackboardCollision(state);
   checkGroundBounce(state);
   checkOutOfBounds(state);
 }
 
 function updateFallThrough(state: GameState, dt: number): void {
   const ball = state.ball;
-  ball.vel.y = 120;
-  ball.vel.x *= 0.9;
-  ball.pos.y += ball.vel.y * dt;
-  ball.pos.x += ball.vel.x * dt;
-  ball.rotation += ball.vel.x * dt * 0.02;
+  const dc = state.difficultyConfig;
+  const groundY = state.canvasH * CONFIG.GROUND_Y_RATIO;
 
-  state.feedbackTimer -= dt;
-  if (state.feedbackTimer <= 0) {
+  ball.prevY = ball.pos.y;
+  ball.vel.y += dc.gravity * dt;
+  ball.vel.x *= 0.94;
+  ball.pos.x += ball.vel.x * dt;
+  ball.pos.y += ball.vel.y * dt;
+  ball.rotation += (ball.vel.x * 0.05 + 2.2) * dt;
+
+  const fadeStartY = state.hoop.netBottom - 6;
+  if (ball.pos.y > fadeStartY) {
+    ball.opacity -= dt / CONFIG.BALL_FADE_DURATION;
+  }
+  if (ball.pos.y + ball.radius >= groundY) {
+    ball.pos.y = groundY - ball.radius;
+    ball.opacity -= dt / 0.12;
+  }
+  if (ball.opacity <= 0) {
+    ball.opacity = 0;
     state.phase = 'scored';
-    state.feedbackTimer = CONFIG.FEEDBACK_DURATION;
+    if (state.feedbackTimer <= 0) {
+      state.feedbackTimer = CONFIG.FEEDBACK_DURATION;
+    }
   }
 }
 
@@ -177,24 +203,44 @@ function checkGroundBounce(state: GameState): void {
 }
 
 function checkScore(state: GameState): void {
+  if (!isRimEntryFromAbove(state)) return;
+
+  state.score += state.multiplier;
+  state.streak += 1;
+  state.multiplier = Math.min(CONFIG.MAX_MULTIPLIER, state.streak + 1);
+  state.currency += state.multiplier;
+  state.phase = 'falling_through';
+  state.feedbackType = 'score';
+  state.feedbackTimer = CONFIG.FEEDBACK_DURATION;
+  state.netSwish = 1;
+  playSound('score');
+
+  const shift = Math.min(state.streak * 8, state.canvasW * 0.15);
+  state.player.x = state.player.baseX + shift;
+}
+
+/** Ball is currently dropping through the rim cylinder (already counted a make). */
+export function isPassingThroughRim(state: GameState): boolean {
+  const { ball, hoop } = state;
+  const inRimX = ball.pos.x > hoop.rimLeftX + 2 && ball.pos.x < hoop.rimRightX - 2;
+  return (
+    (state.phase === 'falling_through' || state.passedAboveRim) &&
+    inRimX &&
+    ball.vel.y > 0 &&
+    ball.pos.y > hoop.rimY - ball.radius
+  );
+}
+
+/**
+ * A swish requires: no ground bounce, the ball fully above the rim this shot,
+ * then a downward crossing of the rim plane while inside the rim.
+ */
+export function isRimEntryFromAbove(state: GameState): boolean {
+  if (state.bounceCount > 0 || !state.passedAboveRim) return false;
   const { ball, hoop } = state;
   const inRimX = ball.pos.x > hoop.rimLeftX + 5 && ball.pos.x < hoop.rimRightX - 5;
-  const crossedRimY = ball.pos.y > hoop.rimY && ball.pos.y < hoop.rimY + 20;
-  const goingDown = ball.vel.y > 0;
-
-  if (inRimX && crossedRimY && goingDown) {
-    state.score += state.multiplier;
-    state.streak += 1;
-    state.multiplier = Math.min(CONFIG.MAX_MULTIPLIER, state.streak + 1);
-    state.currency += state.multiplier;
-    state.phase = 'falling_through';
-    state.feedbackType = 'score';
-    state.feedbackTimer = CONFIG.FALL_THROUGH_DURATION;
-    playSound('score');
-
-    const shift = Math.min(state.streak * 8, state.canvasW * 0.15);
-    state.player.x = state.player.baseX + shift;
-  }
+  const crossedPlane = ball.prevY < hoop.rimY && ball.pos.y >= hoop.rimY;
+  return inRimX && crossedPlane && ball.vel.y > 0;
 }
 
 function checkOutOfBounds(state: GameState): void {

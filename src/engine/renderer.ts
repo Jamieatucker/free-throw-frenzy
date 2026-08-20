@@ -1,24 +1,34 @@
 import { GameState, BackgroundId } from '../types/game';
 import { CONFIG } from './config';
+import { applyCameraTransform } from './camera';
+import { computeNetCords, computeNetBands, NetLayer } from './net';
 
 export function render(ctx: CanvasRenderingContext2D, state: GameState): void {
   const { canvasW: W, canvasH: H } = state;
   const groundY = H * CONFIG.GROUND_Y_RATIO;
+  const minY = state.camera.y;
 
   ctx.clearRect(0, 0, W, H);
 
-  drawBackground(ctx, W, H, groundY, state.activeBackground);
+  ctx.save();
+  applyCameraTransform(ctx, state.camera);
+
+  drawBackground(ctx, W, H, groundY, state.activeBackground, minY);
   drawCourt(ctx, W, H, groundY, state.activeBackground);
   drawPole(ctx, W, H, groundY);
   drawBackboard(ctx, state);
   drawRim(ctx, state);
-  drawNet(ctx, state);
+  drawNetLayer(ctx, state, 'back');
   drawPlayer(ctx, state, groundY);
   drawBall(ctx, state);
+  drawNetLayer(ctx, state, 'front');
   drawPowerMeter(ctx, state, groundY);
+  drawFireEffect(ctx, state);
+
+  ctx.restore();
+
   drawWindIndicator(ctx, state);
   drawFeedback(ctx, state);
-  drawFireEffect(ctx, state);
 }
 
 function celOutline(ctx: CanvasRenderingContext2D, lineWidth = 2.5) {
@@ -30,27 +40,27 @@ function celOutline(ctx: CanvasRenderingContext2D, lineWidth = 2.5) {
 
 // ── BACKGROUNDS ──
 
-function drawBackground(ctx: CanvasRenderingContext2D, W: number, H: number, groundY: number, bg: BackgroundId): void {
+function drawBackground(ctx: CanvasRenderingContext2D, W: number, H: number, groundY: number, bg: BackgroundId, minY: number): void {
   switch (bg) {
-    case 'stadium': drawStadiumBg(ctx, W, H, groundY); break;
-    case 'park': drawParkBg(ctx, W, H, groundY); break;
-    case 'farm': drawFarmBg(ctx, W, H, groundY); break;
-    case 'desert': drawDesertBg(ctx, W, H, groundY); break;
-    case 'pirate': drawPirateBg(ctx, W, H, groundY); break;
-    case 'amazon': drawAmazonBg(ctx, W, H, groundY); break;
-    case 'rooftop': drawRooftopBg(ctx, W, H, groundY); break;
-    case 'space': drawSpaceBg(ctx, W, H, groundY); break;
+    case 'stadium': drawStadiumBg(ctx, W, H, groundY, minY); break;
+    case 'park': drawParkBg(ctx, W, H, groundY, minY); break;
+    case 'farm': drawFarmBg(ctx, W, H, groundY, minY); break;
+    case 'desert': drawDesertBg(ctx, W, H, groundY, minY); break;
+    case 'pirate': drawPirateBg(ctx, W, H, groundY, minY); break;
+    case 'amazon': drawAmazonBg(ctx, W, H, groundY, minY); break;
+    case 'rooftop': drawRooftopBg(ctx, W, H, groundY, minY); break;
+    case 'space': drawSpaceBg(ctx, W, H, groundY, minY); break;
   }
 }
 
-function drawStadiumBg(ctx: CanvasRenderingContext2D, W: number, H: number, groundY: number): void {
+function drawStadiumBg(ctx: CanvasRenderingContext2D, W: number, H: number, groundY: number, minY: number): void {
   // Dark arena upper
-  const grad = ctx.createLinearGradient(0, 0, 0, groundY);
+  const grad = ctx.createLinearGradient(0, minY, 0, groundY);
   grad.addColorStop(0, '#0a0a12');
   grad.addColorStop(0.3, '#121222');
   grad.addColorStop(1, '#1a1a30');
   ctx.fillStyle = grad;
-  ctx.fillRect(0, 0, W, groundY);
+  ctx.fillRect(0, minY, W, groundY - minY);
 
   // Crowd silhouette rows
   ctx.fillStyle = '#1e1e3a';
@@ -96,12 +106,12 @@ function drawStadiumBg(ctx: CanvasRenderingContext2D, W: number, H: number, grou
   ctx.fillText('FREE THROW FRENZY', W * 0.5, 20);
 }
 
-function drawParkBg(ctx: CanvasRenderingContext2D, W: number, H: number, groundY: number): void {
-  const grad = ctx.createLinearGradient(0, 0, 0, groundY);
+function drawParkBg(ctx: CanvasRenderingContext2D, W: number, H: number, groundY: number, minY: number): void {
+  const grad = ctx.createLinearGradient(0, minY, 0, groundY);
   grad.addColorStop(0, '#87ceeb');
   grad.addColorStop(1, '#b0e0e6');
   ctx.fillStyle = grad;
-  ctx.fillRect(0, 0, W, groundY);
+  ctx.fillRect(0, minY, W, groundY - minY);
   // Clouds
   ctx.fillStyle = '#ffffffbb';
   for (const cx of [120, 400, 700]) {
@@ -126,12 +136,12 @@ function drawParkBg(ctx: CanvasRenderingContext2D, W: number, H: number, groundY
   }
 }
 
-function drawFarmBg(ctx: CanvasRenderingContext2D, W: number, H: number, groundY: number): void {
-  const grad = ctx.createLinearGradient(0, 0, 0, groundY);
+function drawFarmBg(ctx: CanvasRenderingContext2D, W: number, H: number, groundY: number, minY: number): void {
+  const grad = ctx.createLinearGradient(0, minY, 0, groundY);
   grad.addColorStop(0, '#ffd54f');
   grad.addColorStop(1, '#ffb300');
   ctx.fillStyle = grad;
-  ctx.fillRect(0, 0, W, groundY);
+  ctx.fillRect(0, minY, W, groundY - minY);
   // Barn
   ctx.fillStyle = '#b71c1c';
   ctx.fillRect(30, groundY - 90, 80, 90);
@@ -164,12 +174,12 @@ function drawFarmBg(ctx: CanvasRenderingContext2D, W: number, H: number, groundY
   ctx.stroke();
 }
 
-function drawDesertBg(ctx: CanvasRenderingContext2D, W: number, H: number, groundY: number): void {
-  const grad = ctx.createLinearGradient(0, 0, 0, groundY);
+function drawDesertBg(ctx: CanvasRenderingContext2D, W: number, H: number, groundY: number, minY: number): void {
+  const grad = ctx.createLinearGradient(0, minY, 0, groundY);
   grad.addColorStop(0, '#ff8f00');
   grad.addColorStop(1, '#e65100');
   ctx.fillStyle = grad;
-  ctx.fillRect(0, 0, W, groundY);
+  ctx.fillRect(0, minY, W, groundY - minY);
   // Sun
   ctx.fillStyle = '#fff9c4';
   ctx.beginPath();
@@ -194,12 +204,12 @@ function drawDesertBg(ctx: CanvasRenderingContext2D, W: number, H: number, groun
   ctx.fill();
 }
 
-function drawPirateBg(ctx: CanvasRenderingContext2D, W: number, H: number, groundY: number): void {
-  const grad = ctx.createLinearGradient(0, 0, 0, groundY);
+function drawPirateBg(ctx: CanvasRenderingContext2D, W: number, H: number, groundY: number, minY: number): void {
+  const grad = ctx.createLinearGradient(0, minY, 0, groundY);
   grad.addColorStop(0, '#1565c0');
   grad.addColorStop(1, '#0d47a1');
   ctx.fillStyle = grad;
-  ctx.fillRect(0, 0, W, groundY);
+  ctx.fillRect(0, minY, W, groundY - minY);
   // Waves
   ctx.strokeStyle = '#1e88e5';
   ctx.lineWidth = 2;
@@ -232,12 +242,12 @@ function drawPirateBg(ctx: CanvasRenderingContext2D, W: number, H: number, groun
   ctx.fill();
 }
 
-function drawAmazonBg(ctx: CanvasRenderingContext2D, W: number, H: number, groundY: number): void {
-  const grad = ctx.createLinearGradient(0, 0, 0, groundY);
+function drawAmazonBg(ctx: CanvasRenderingContext2D, W: number, H: number, groundY: number, minY: number): void {
+  const grad = ctx.createLinearGradient(0, minY, 0, groundY);
   grad.addColorStop(0, '#1b5e20');
   grad.addColorStop(1, '#2e7d32');
   ctx.fillStyle = grad;
-  ctx.fillRect(0, 0, W, groundY);
+  ctx.fillRect(0, minY, W, groundY - minY);
   // Dense foliage
   for (let i = 0; i < 40; i++) {
     const x = (i * 23 + 10) % W;
@@ -258,12 +268,12 @@ function drawAmazonBg(ctx: CanvasRenderingContext2D, W: number, H: number, groun
   }
 }
 
-function drawRooftopBg(ctx: CanvasRenderingContext2D, W: number, H: number, groundY: number): void {
-  const grad = ctx.createLinearGradient(0, 0, 0, groundY);
+function drawRooftopBg(ctx: CanvasRenderingContext2D, W: number, H: number, groundY: number, minY: number): void {
+  const grad = ctx.createLinearGradient(0, minY, 0, groundY);
   grad.addColorStop(0, '#1a1a2e');
   grad.addColorStop(1, '#2d2d5e');
   ctx.fillStyle = grad;
-  ctx.fillRect(0, 0, W, groundY);
+  ctx.fillRect(0, minY, W, groundY - minY);
   // City skyline
   const buildingColors = ['#252545', '#2a2a50', '#1f1f3f'];
   const heights = [120, 90, 150, 80, 130, 100, 140, 70, 110, 95, 160, 85];
@@ -287,9 +297,9 @@ function drawRooftopBg(ctx: CanvasRenderingContext2D, W: number, H: number, grou
   }
 }
 
-function drawSpaceBg(ctx: CanvasRenderingContext2D, W: number, H: number, groundY: number): void {
+function drawSpaceBg(ctx: CanvasRenderingContext2D, W: number, H: number, groundY: number, minY: number): void {
   ctx.fillStyle = '#000011';
-  ctx.fillRect(0, 0, W, H);
+  ctx.fillRect(0, minY, W, Math.max(H, groundY) - minY);
   // Stars
   ctx.fillStyle = '#ffffff';
   for (let i = 0; i < 80; i++) {
@@ -443,29 +453,57 @@ function drawRim(ctx: CanvasRenderingContext2D, state: GameState): void {
   }
 }
 
-function drawNet(ctx: CanvasRenderingContext2D, state: GameState): void {
-  const { hoop } = state;
-  ctx.strokeStyle = '#ffffffaa';
-  ctx.lineWidth = 1.2;
-  const segments = 6;
-  for (let i = 0; i <= segments; i++) {
-    const t = i / segments;
-    const topX = hoop.rimLeftX + t * (hoop.rimRightX - hoop.rimLeftX);
-    const sway = Math.sin(Date.now() / 400 + i) * 2;
-    const bottomX = hoop.rimLeftX + 12 + t * (hoop.rimRightX - hoop.rimLeftX - 24) + sway;
+function drawNetLayer(ctx: CanvasRenderingContext2D, state: GameState, layer: NetLayer): void {
+  const cords = computeNetCords(state, Date.now()).filter((c) => c.layer === layer);
+  const bands = computeNetBands(state).filter((b) => b.layer === layer);
+  const isFront = layer === 'front';
+
+  ctx.strokeStyle = isFront ? '#fffffff0' : '#ffffff99';
+  ctx.lineWidth = isFront ? 1.6 : 1.15;
+  ctx.lineCap = 'round';
+  ctx.lineJoin = 'round';
+
+  for (const cord of cords) {
     ctx.beginPath();
-    ctx.moveTo(topX, hoop.rimY + 3);
-    ctx.quadraticCurveTo((topX + bottomX) / 2 + sway, (hoop.rimY + hoop.netBottom) / 2 + 5, bottomX, hoop.netBottom);
+    ctx.moveTo(cord.topX, cord.topY);
+    ctx.quadraticCurveTo(cord.midX, cord.midY, cord.bottomX, cord.bottomY);
     ctx.stroke();
   }
-  for (let row = 1; row <= 3; row++) {
-    const t = row / 4;
-    const y = hoop.rimY + 3 + t * (hoop.netBottom - hoop.rimY - 3);
-    const inset = t * 12;
-    ctx.beginPath();
-    ctx.moveTo(hoop.rimLeftX + inset, y);
-    ctx.lineTo(hoop.rimRightX - inset, y);
-    ctx.stroke();
+
+  for (const band of bands) {
+    if (band.gapLeftX === null || band.gapRightX === null) {
+      if (!isFront) {
+        ctx.beginPath();
+        ctx.moveTo(band.leftX, band.y);
+        ctx.lineTo(band.rightX, band.y);
+        ctx.stroke();
+      }
+      continue;
+    }
+    if (isFront) {
+      ctx.beginPath();
+      ctx.moveTo(band.gapLeftX, band.y);
+      ctx.quadraticCurveTo(
+        (band.gapLeftX + band.gapRightX) / 2,
+        band.y + 6,
+        band.gapRightX,
+        band.y
+      );
+      ctx.stroke();
+    } else {
+      if (band.gapLeftX > band.leftX) {
+        ctx.beginPath();
+        ctx.moveTo(band.leftX, band.y);
+        ctx.lineTo(band.gapLeftX, band.y);
+        ctx.stroke();
+      }
+      if (band.gapRightX < band.rightX) {
+        ctx.beginPath();
+        ctx.moveTo(band.gapRightX, band.y);
+        ctx.lineTo(band.rightX, band.y);
+        ctx.stroke();
+      }
+    }
   }
 }
 
@@ -620,8 +658,10 @@ function drawPlayer(ctx: CanvasRenderingContext2D, state: GameState, groundY: nu
 
 function drawBall(ctx: CanvasRenderingContext2D, state: GameState): void {
   const { ball } = state;
+  if (ball.opacity <= 0) return;
   const r = ball.radius;
   ctx.save();
+  ctx.globalAlpha = Math.max(0, Math.min(1, ball.opacity));
   ctx.translate(ball.pos.x, ball.pos.y);
   ctx.rotate(ball.rotation);
 

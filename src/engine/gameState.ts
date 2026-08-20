@@ -2,6 +2,7 @@ import { GameState, Hoop, Difficulty, DifficultyConfig } from '../types/game';
 import { CONFIG } from './config';
 import { getActiveBackground } from '../utils/shopData';
 import { DIFFICULTY_CONFIGS } from '../utils/difficultyData';
+import { createCamera, resetCamera } from './camera';
 
 function createHoop(canvasW: number, canvasH: number, dc: DifficultyConfig): Hoop {
   const groundY = canvasH * CONFIG.GROUND_Y_RATIO;
@@ -31,6 +32,8 @@ export function createInitialState(canvasW: number, canvasH: number, difficulty:
       vel: { x: 0, y: 0 },
       radius: CONFIG.BALL_RADIUS,
       rotation: 0,
+      prevY: groundY - 80,
+      opacity: 1,
     },
     hoop,
     player: { x: playerX, y: groundY, baseX: playerX },
@@ -49,6 +52,9 @@ export function createInitialState(canvasW: number, canvasH: number, difficulty:
     bounceCount: 0,
     difficulty,
     difficultyConfig: dc,
+    camera: createCamera(),
+    netSwish: 0,
+    passedAboveRim: false,
   };
 }
 
@@ -59,11 +65,16 @@ export function resetBall(state: GameState): void {
   state.ball.vel.x = 0;
   state.ball.vel.y = 0;
   state.ball.rotation = 0;
+  state.ball.prevY = groundY - 80;
+  state.ball.opacity = 1;
   state.chargePower = 0;
   state.shotTimer = CONFIG.SHOT_TIMER;
   state.wind = (Math.random() - 0.5) * state.difficultyConfig.windRange * 2;
   state.bounceCount = 0;
   state.phase = 'idle';
+  resetCamera(state.camera);
+  state.netSwish = 0;
+  state.passedAboveRim = false;
 }
 
 export function getHighScore(): number {

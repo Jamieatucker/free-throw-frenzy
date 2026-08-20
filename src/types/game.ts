@@ -32,6 +32,8 @@ export interface Ball {
   vel: Vec2;
   radius: number;
   rotation: number;
+  prevY: number;
+  opacity: number;
 }
 
 export interface Hoop {
@@ -49,6 +51,12 @@ export interface Player {
   x: number;
   y: number;
   baseX: number;
+}
+
+/** Viewport offset in world space. (0, 0) is the default court framing. */
+export interface Camera {
+  x: number;
+  y: number;
 }
 
 export type BackgroundId =
@@ -88,6 +96,11 @@ export interface GameState {
   bounceCount: number;
   difficulty: Difficulty;
   difficultyConfig: DifficultyConfig;
+  camera: Camera;
+  /** 1 just after a make, decays to 0 — drives net snap-back sway. */
+  netSwish: number;
+  /** True once the ball has been fully above the rim this shot (before any ground bounce). */
+  passedAboveRim: boolean;
 }
 
 export interface GameCallbacks {

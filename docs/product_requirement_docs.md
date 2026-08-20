@@ -35,7 +35,8 @@ Desktop browsers (keyboard — spacebar) and mobile browsers (touch hold/release
 
 ### Camera / Perspective
 - Third-person side view: player on left, hoop on right.
-- Single HTML5 `<canvas>` element managed inside a React component.
+- Single HTML5 `<canvas>` element managed inside a React component (`GameCanvas`).
+- Dynamic vertical camera: when a free throw arcs above the default framing, the viewport pans up so the ball stays visible, then returns to rest. Horizontal overshoot (past the hoop) and balls that bounce off the sides of the screen are **not** tracked.
 
 ### Non-Functional
 - 60 FPS target; `requestAnimationFrame` loop.

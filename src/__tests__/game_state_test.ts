@@ -21,6 +21,11 @@ describe('GameState', () => {
     expect(state.bounceCount).toBe(0);
     expect(state.activeBackground).toBe('stadium');
     expect(state.difficulty).toBe('medium');
+    expect(state.camera.x).toBe(0);
+    expect(state.camera.y).toBe(0);
+    expect(state.netSwish).toBe(0);
+    expect(state.passedAboveRim).toBe(false);
+    expect(state.ball.opacity).toBe(1);
   });
 
   it('should carry difficulty config into state', () => {

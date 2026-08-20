@@ -39,13 +39,24 @@ npm run build      # production bundle
 
 ### Rendering Pipeline (60 FPS) — Cel-Shaded Style
 1. Clear canvas.
-2. Draw sky (gradient + stars).
-3. Draw court (3-band cel shading + dashed free-throw line + pole).
-4. Draw backboard + rim + net (cel-shaded with dark outlines).
-5. Draw player (multi-tone jersey, skin highlight/shadow, hair, animated shooting arm).
-6. Draw ball (dark/light halves, highlight spot, seam curve, cel outline).
-7. Draw power meter with gradient fill + ideal zone highlight.
-8. Draw "on-fire" particles when streak ≥ 5.
+2. Apply camera transform (`translate(-camera.x, -camera.y)`). World drawing is in world space.
+3. Draw sky (gradient + stars), extending above y=0 when the camera has panned up.
+4. Draw court (3-band cel shading + dashed free-throw line + pole).
+5. Draw backboard + rim + net (cel-shaded with dark outlines).
+6. Draw player (multi-tone jersey, skin highlight/shadow, hair, animated shooting arm).
+7. Draw ball (dark/light halves, highlight spot, seam curve, cel outline).
+8. Draw power meter with gradient fill + ideal zone highlight.
+9. Draw "on-fire" particles when streak ≥ 5.
+10. Restore transform. Draw screen-space overlays (wind indicator, SWISH/MISS) so they stay pinned to the canvas.
+
+### Dynamic Camera
+- **Purpose**: Keep the basketball visible on high-arc shots. Ideal-power trajectories already peak above the 500px canvas (`peakY ≈ -40`).
+- **Follow axis**: Y only. `camera.x` is always 0, so overshoots past the hoop and side-bounces still leave the screen.
+- **When it follows**: `phase === 'flying'` and the ball still intersects the canvas horizontally.
+- **When it rests**: idle, charging, scored, missed, falling_through, or the ball has left the left/right edges.
+- **Motion**: exponential lerp toward `ballTop - CAMERA_TOP_MARGIN`, with a short upward look-ahead. Hard clamps keep the ball from clipping the top or bottom if lerp lags.
+- **Reset**: `resetBall` snaps the camera back to `(0, 0)` for the next shot.
+- **Module**: `src/engine/camera.ts`. Tunables live in `config.ts` (`CAMERA_TOP_MARGIN`, `CAMERA_FOLLOW_LERP`, `CAMERA_LOOKAHEAD`).
 
 ### Audio
 - Web Audio API synthesized sounds (no asset files).

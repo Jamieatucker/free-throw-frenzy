@@ -1,9 +1,11 @@
 import { GameState, GameCallbacks } from '../types/game';
 import { updatePhysics, launchBall } from './physics';
 import { updateCharge } from './input';
+import { updateCamera } from './camera';
 import { render } from './renderer';
 import { resetBall, saveHighScore } from './gameState';
 import { saveCoins, getSavedCoins } from '../utils/shopData';
+import { CONFIG } from './config';
 
 let gameOverSaved = false;
 
@@ -61,8 +63,13 @@ function update(state: GameState, dt: number): void {
   }
 
   updatePhysics(state, dt);
+  updateCamera(state, dt);
 
-  if (state.feedbackTimer > 0 && state.phase !== 'falling_through') {
+  if (state.netSwish > 0) {
+    state.netSwish = Math.max(0, state.netSwish - dt / CONFIG.NET_SWISH_DURATION);
+  }
+
+  if (state.feedbackTimer > 0) {
     state.feedbackTimer -= dt;
   }
 

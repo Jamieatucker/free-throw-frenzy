@@ -13,8 +13,10 @@ flowchart TD
         end
         subgraph Engine["Engine Layer (pure TS)"]
             GL["gameLoop.ts"] --> PHY["physics.ts"]
+            GL --> CAM["camera.ts\n(vertical follow)"]
             GL --> REN["renderer.ts"]
             GL --> GS["gameState.ts"]
+            CAM --> REN
             INP["input.ts"] --> GS
             AUD["audio.ts"]
             CFG["config.ts\n(static constants)"]

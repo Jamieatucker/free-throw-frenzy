@@ -14,6 +14,7 @@ flowchart LR
     subgraph Engine["Game Engine (pure TS)"]
         Loop["gameLoop.ts\n(requestAnimationFrame)"]
         Physics["physics.ts\n(solveArcVelocity, collision)"]
+        Camera["camera.ts\n(vertical follow, no X pan)"]
         Input["input.ts\n(keyboard + touch)"]
         Renderer["renderer.ts\n(cel-shaded canvas)"]
         State["gameState.ts\n(score, streak, timer, ball)"]
@@ -26,8 +27,10 @@ flowchart LR
     App --> HUD
     Canvas --> Loop
     Loop --> Physics
+    Loop --> Camera
     Loop --> Renderer
     Loop --> State
+    Camera --> Renderer
     Input --> State
 ```
 
@@ -36,10 +39,11 @@ flowchart LR
 | Component | File | Role |
 |-----------|------|------|
 | App | `src/App.tsx` | Root; mounts Canvas + HUD |
-| GameCanvas | `src/components/GameCanvas.tsx` | Owns `<canvas>`, starts game loop |
+| GameCanvas | `src/components/GameCanvas.tsx` | Owns `<canvas>`, starts game loop, resets camera on remount |
 | HUD | `src/components/HUD.tsx` | React overlay for score/streak/timer |
 | gameLoop | `src/engine/gameLoop.ts` | rAF loop; calls update + render each frame |
 | physics | `src/engine/physics.ts` | Gravity, trajectory, collision detection |
+| camera | `src/engine/camera.ts` | Vertical follow-cam so high-arc shots stay on screen |
 | input | `src/engine/input.ts` | Spacebar / touch listeners; charge tracking |
 | renderer | `src/engine/renderer.ts` | All canvas draw calls (court, player, ball, hoop) |
 | gameState | `src/engine/gameState.ts` | Central mutable state object |
@@ -47,8 +51,9 @@ flowchart LR
 ## Data Flow (per frame)
 1. `input.ts` updates charge/power in `gameState`.
 2. `gameLoop.ts` calls `physics.update(dt)` → moves ball, checks collisions.
-3. `gameLoop.ts` calls `renderer.draw(state)` → clears canvas, redraws scene.
-4. On score/miss event, `gameState` updates score/streak/multiplier; React HUD re-renders via callback.
+3. `gameLoop.ts` calls `camera.updateCamera(dt)` → pans Y to keep a high-arc ball on screen (never pans X).
+4. `gameLoop.ts` calls `renderer.draw(state)` → applies camera transform, redraws the world, then draws screen-space HUD.
+5. On score/miss event, `gameState` updates score/streak/multiplier; React HUD re-renders via callback.
 
 ## Directory Layout
 ```
@@ -57,7 +62,7 @@ free-throw-frenzy/
 ├── src/
 │   ├── App.tsx
 │   ├── components/  # GameCanvas, HUD
-│   ├── engine/      # gameLoop, physics, input, renderer, gameState
+│   ├── engine/      # gameLoop, physics, camera, input, renderer, gameState
 │   ├── styles/      # Tailwind + CSS files
 │   └── types/       # shared TS interfaces
 ├── tests/           # unit tests
@@ -76,3 +81,4 @@ free-throw-frenzy/
 - **Web Audio API**: Synthesized sounds (no audio files) — keeps bundle small and loads instantly.
 - **Error boundary**: Prevents full-page crashes; offers recovery UI.
 - **Config module**: Single source of truth for all tunable game constants.
+- **Vertical follow camera**: `camera.ts` pans the viewport up when a shot peaks above the canvas, then lerps back. Horizontal overshoot and side-bounces are not tracked — those misses still leave the screen.

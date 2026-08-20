@@ -71,7 +71,16 @@
 - [x] `difficulty_test.ts` — 8 tests (36 total)
 - [x] Updated changelog, Mermaid diagram, active_context, tasks_plan
 
-## Future Work (Phase 10+)
+## Phase 10: Dynamic Camera (v0.7.0) ✅
+- [x] `Camera` type + `state.camera` on GameState
+- [x] `src/engine/camera.ts` — vertical follow, no X pan, lerp + visibility clamps
+- [x] `gameLoop` updates camera after physics; `renderer` applies transform
+- [x] Backgrounds extend above y=0 when looking up; HUD overlays stay screen-space
+- [x] `GameCanvas` resets camera on remount; `resetBall` snaps to rest
+- [x] `camera_test.ts` — 24 tests (60 total, all passing)
+- [x] Diagram `diagrams/camera.md`; docs + changelog updated
+
+## Future Work (Phase 11+)
 - [ ] Difficulty scaling (wind increases, timer decreases with streak)
 - [ ] Screen shake on miss
 - [ ] Responsive canvas sizing with ResizeObserver
@@ -82,4 +91,4 @@
 - None.
 
 ## Current Status
-v0.6.0 — 36 tests, all passing. Main menu, difficulty system, per-difficulty physics/layout, HUD badge all complete.
+v0.7.0 — 60 tests, all passing. Dynamic vertical camera keeps high-arc shots on screen without chasing overshoots or side-bounces.

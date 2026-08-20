@@ -1,5 +1,5 @@
 import { createInitialState, resetBall } from '../engine/gameState';
-import { updatePhysics, launchBall, isWithinTolerance } from '../engine/physics';
+import { updatePhysics, launchBall, isWithinTolerance, isRimEntryFromAbove } from '../engine/physics';
 import { CONFIG } from '../engine/config';
 
 jest.mock('../engine/audio', () => ({
@@ -62,14 +62,28 @@ describe('Physics Engine', () => {
     expect(state.ball.pos.y).toBeLessThanOrEqual(groundY - state.ball.radius);
   });
 
-  it('should mark missed after max bounces', () => {
+  it('should still be flying after two ground bounces', () => {
     const state = createInitialState(W, H);
     state.phase = 'flying';
-    state.bounceCount = CONFIG.MAX_BOUNCES;
+    state.bounceCount = 1;
     const groundY = H * CONFIG.GROUND_Y_RATIO;
     state.ball.pos.y = groundY - state.ball.radius + 1;
-    state.ball.vel.y = 100;
+    state.ball.vel.y = 200;
     updatePhysics(state, 0.016);
+    expect(state.bounceCount).toBe(2);
+    expect(state.phase).toBe('flying');
+  });
+
+  it('should mark missed on the third ground bounce', () => {
+    const state = createInitialState(W, H);
+    expect(CONFIG.MAX_BOUNCES).toBe(3);
+    state.phase = 'flying';
+    state.bounceCount = 2;
+    const groundY = H * CONFIG.GROUND_Y_RATIO;
+    state.ball.pos.y = groundY - state.ball.radius + 1;
+    state.ball.vel.y = 200;
+    updatePhysics(state, 0.016);
+    expect(state.bounceCount).toBe(3);
     expect(state.phase).toBe('missed');
   });
 
@@ -140,5 +154,84 @@ describe('Physics Engine', () => {
     // Ball should still be flying (not blocked)
     expect(state.phase).toBe('flying');
     expect(state.ball.pos.x).toBeGreaterThan(state.hoop.backboardX + 50);
+  });
+
+  it('should not count a swish from a ground bounce under the net', () => {
+    const state = createInitialState(W, H);
+    state.phase = 'flying';
+    state.bounceCount = 1;
+    state.passedAboveRim = false;
+    state.score = 0;
+    const rimCenterX = (state.hoop.rimLeftX + state.hoop.rimRightX) / 2;
+    state.ball.pos.x = rimCenterX;
+    state.ball.pos.y = state.hoop.rimY + 10;
+    state.ball.prevY = state.hoop.rimY + 8;
+    state.ball.vel.x = 0;
+    state.ball.vel.y = 180;
+    updatePhysics(state, 0.016);
+    expect(isRimEntryFromAbove(state)).toBe(false);
+    expect(state.phase).toBe('flying');
+    expect(state.score).toBe(0);
+    expect(state.feedbackType).not.toBe('score');
+  });
+
+  it('should not count a swish if the ball never went above the rim', () => {
+    const state = createInitialState(W, H);
+    state.phase = 'flying';
+    state.bounceCount = 0;
+    state.passedAboveRim = false;
+    state.score = 0;
+    const rimCenterX = (state.hoop.rimLeftX + state.hoop.rimRightX) / 2;
+    state.ball.pos.x = rimCenterX;
+    state.ball.pos.y = state.hoop.rimY + 8;
+    state.ball.vel.y = 200;
+    updatePhysics(state, 0.016);
+    expect(state.phase).toBe('flying');
+    expect(state.score).toBe(0);
+  });
+
+  it('should count a swish only when the ball crosses the rim from above', () => {
+    const state = createInitialState(W, H);
+    state.phase = 'flying';
+    state.bounceCount = 0;
+    state.passedAboveRim = true;
+    state.score = 0;
+    const rimCenterX = (state.hoop.rimLeftX + state.hoop.rimRightX) / 2;
+    state.ball.pos.x = rimCenterX;
+    state.ball.pos.y = state.hoop.rimY - 3;
+    state.ball.prevY = state.hoop.rimY - 3;
+    state.ball.vel.x = 0;
+    state.ball.vel.y = 280;
+    updatePhysics(state, 0.016);
+    expect(state.phase).toBe('falling_through');
+    expect(state.score).toBeGreaterThan(0);
+    expect(state.netSwish).toBe(1);
+  });
+
+  it('should keep the ball moving through the net then fade it out', () => {
+    const state = createInitialState(W, H);
+    state.phase = 'falling_through';
+    state.netSwish = 1;
+    state.feedbackType = 'score';
+    state.feedbackTimer = CONFIG.FEEDBACK_DURATION;
+    const rimCenterX = (state.hoop.rimLeftX + state.hoop.rimRightX) / 2;
+    state.ball.pos.x = rimCenterX;
+    state.ball.pos.y = state.hoop.rimY + 4;
+    state.ball.vel.x = 0;
+    state.ball.vel.y = 160;
+    state.ball.opacity = 1;
+
+    const startY = state.ball.pos.y;
+    updatePhysics(state, 0.032);
+    expect(state.phase).toBe('falling_through');
+    expect(state.ball.pos.y).toBeGreaterThan(startY);
+    expect(state.ball.opacity).toBeGreaterThan(0);
+
+    for (let i = 0; i < 80; i++) {
+      updatePhysics(state, 0.02);
+      if (state.phase === 'scored') break;
+    }
+    expect(state.phase).toBe('scored');
+    expect(state.ball.opacity).toBe(0);
   });
 });

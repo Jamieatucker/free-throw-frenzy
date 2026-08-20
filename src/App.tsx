@@ -33,6 +33,7 @@ const App: React.FC = () => {
       ball: { ...s.ball, pos: { ...s.ball.pos }, vel: { ...s.ball.vel } },
       hoop: { ...s.hoop },
       player: { ...s.player },
+      camera: { ...s.camera },
     });
     if (s.phase === 'gameover') {
       setTotalCoins(getSavedCoins());

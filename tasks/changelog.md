@@ -1,5 +1,43 @@
 # Changelog — Free Throw Frenzy
 
+## [0.7.2] — 2026-08-20
+### Fixed
+- **Swish animation**: After a make the ball keeps falling through the net (no snap-to-center freeze), then fades out instead of hanging mid-air until the next shot.
+- **Bounce swish exploit**: A ground bounce into the net no longer counts as a make. The ball must pass above the rim, then cross the rim plane downward inside the rim, with `bounceCount === 0`.
+
+## [0.7.1] — 2026-08-20
+### Added
+- **Net swish**: On a make, net cords wrap around the basketball (back strings behind, front strings over the ball) and stretch as it drops through, then snap back. Driven by `src/engine/net.ts`.
+- `net_test.ts` covering wrap, band gap, stretch, and swish reset.
+
+### Changed
+- Miss is called after **3** ground bounces (was 5).
+- Fall-through lasts 0.6s and eases the ball toward rim center so it reads as going through the net, not sitting on it.
+
+## [0.7.0] — 2026-08-20
+### Added
+- **Dynamic camera**: Vertical follow-cam so high-arc free throws stay on screen. Ideal-power shots already peak above the 500px canvas; the camera pans up, then lerps back as the ball descends.
+- `src/engine/camera.ts`: `createCamera`, `updateCamera`, `getCameraTargetY`, world/screen conversion, visibility helpers.
+- `Camera` type on `GameState` (`x`, `y` viewport offset). `camera.x` is always 0.
+- Camera tunables in `config.ts`: `CAMERA_TOP_MARGIN` (56px), `CAMERA_FOLLOW_LERP` (10), `CAMERA_LOOKAHEAD` (0.08s).
+- `camera_test.ts`: 24 tests covering rest framing, high-arc follow, overshoot/side-bounce ignore, lerp vs snap, look-ahead, transforms, and full-shot simulations (60 tests total).
+- Mermaid diagram in `diagrams/camera.md`.
+
+### Changed
+- `gameLoop` runs `updateCamera` after physics each frame.
+- `renderer` applies the camera transform to world drawing (sky, court, hoop, player, ball) and draws wind/feedback in screen space. Backgrounds extend above y=0 when the camera looks up.
+- `GameCanvas` resets the camera on each mount / difficulty change.
+- `resetBall` snaps the camera back to rest for the next shot.
+- App HUD state copy includes `camera`.
+
+### Not in scope (by design)
+- Camera does **not** pan horizontally when the player overshoots the hoop or when the ball bounces off the left/right of the screen. Those misses still leave the play area.
+
+### Improvements (S1–S3)
+- **S1 (Stability/Scalability)**: Follow rules are data-driven off `GameState.phase` and horizontal bounds; adding a new phase that should not track the ball requires no renderer changes.
+- **S2 (Performance/Security)**: Camera update is a few arithmetic ops per frame; transform is one `translate` around existing draw calls. No extra allocations in the hot loop.
+- **S3 (Readability/Maintainability)**: All follow/clamp logic lives in `camera.ts`. Renderer only applies the offset; physics is unchanged.
+
 ## [0.6.0] — 2026-08-19
 ### Added
 - **Main Menu**: Full title screen shown before the game. Displays high score and coin balance, then lets the player choose a difficulty before starting.

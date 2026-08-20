@@ -4,6 +4,7 @@ import { startGameLoop, handleRelease } from '../engine/gameLoop';
 import { setupInput } from '../engine/input';
 import { CONFIG } from '../engine/config';
 import { GameState, Difficulty } from '../types/game';
+import { createCamera } from '../engine/camera';
 
 interface Props {
   difficulty: Difficulty;
@@ -23,6 +24,7 @@ const GameCanvas: React.FC<Props> = ({ difficulty, onStateChange }) => {
     if (!ctx) return;
 
     stateRef.current = createInitialState(CONFIG.CANVAS_W, CONFIG.CANVAS_H, difficulty);
+    stateRef.current.camera = createCamera();
     stateRef.current.wind = (Math.random() - 0.5) * stateRef.current.difficultyConfig.windRange * 2;
 
     const stopLoop = startGameLoop(ctx, stateRef.current, { onStateChange });
