@@ -26,6 +26,10 @@ jest.mock('../utils/shopData', () => ({
   saveCoins: jest.fn(),
 }));
 
+jest.mock('../utils/jerseyData', () => ({
+  getActiveJersey: () => 'det',
+}));
+
 const W = CONFIG.CANVAS_W;
 const H = CONFIG.CANVAS_H;
 
@@ -265,6 +269,7 @@ describe('Camera', () => {
   it('should keep a high-arc makeable shot vertically on screen after the camera settles', () => {
     const state = makeState();
     state.phase = 'charging';
+    state.shotIdealPower = CONFIG.IDEAL_POWER;
     state.chargePower = CONFIG.IDEAL_POWER;
     state.wind = 0;
     launchBall(state);
@@ -274,7 +279,8 @@ describe('Camera', () => {
       updatePhysics(state, 0.01);
       updateCamera(state, 0.01);
       minWorldY = Math.min(minWorldY, state.ball.pos.y);
-      if (state.phase !== 'flying') break;
+      // launchBall mutates phase; TS does not track that narrowing
+      if ((state.phase as string) !== 'flying') break;
 
       if (isBallInHorizontalView(state)) {
         expect(isBallVerticallyOnScreen(state)).toBe(true);
@@ -294,7 +300,7 @@ describe('Camera', () => {
     for (let i = 0; i < 180; i++) {
       updatePhysics(state, 0.01);
       updateCamera(state, 0.01);
-      if (state.phase !== 'flying') break;
+      if ((state.phase as string) !== 'flying') break;
       if (!isBallInHorizontalView(state)) {
         expect(getCameraTargetY(state)).toBe(CONFIG.CAMERA_REST_Y);
         expect(state.camera.x).toBe(CONFIG.CAMERA_REST_X);

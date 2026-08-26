@@ -2,6 +2,7 @@ import { GameState, BackgroundId } from '../types/game';
 import { CONFIG } from './config';
 import { applyCameraTransform } from './camera';
 import { computeNetCords, computeNetBands, NetLayer } from './net';
+import { getJerseyById, shadeHex } from '../utils/jerseyData';
 
 export function render(ctx: CanvasRenderingContext2D, state: GameState): void {
   const { canvasW: W, canvasH: H } = state;
@@ -551,10 +552,11 @@ function drawPlayer(ctx: CanvasRenderingContext2D, state: GameState, groundY: nu
     ctx.stroke();
   }
 
-  // Torso — Pistons blue jersey with red & white accents
-  const jerseyMain = '#1d428a';
-  const jerseyLight = '#2962b0';
-  const jerseyDark = '#0e2a5e';
+  // Torso — active NBA jersey colors
+  const jersey = getJerseyById(state.activeJersey);
+  const jerseyMain = jersey.primary;
+  const jerseyLight = shadeHex(jersey.primary, 28);
+  const jerseyDark = shadeHex(jersey.primary, -36);
   ctx.fillStyle = jerseyMain;
   ctx.beginPath();
   ctx.moveTo(px - 14, py - 40);
@@ -563,7 +565,6 @@ function drawPlayer(ctx: CanvasRenderingContext2D, state: GameState, groundY: nu
   ctx.lineTo(px - 12, py - 76);
   ctx.closePath();
   ctx.fill();
-  // Light side
   ctx.fillStyle = jerseyLight;
   ctx.beginPath();
   ctx.moveTo(px + 2, py - 40);
@@ -572,7 +573,6 @@ function drawPlayer(ctx: CanvasRenderingContext2D, state: GameState, groundY: nu
   ctx.lineTo(px + 2, py - 76);
   ctx.closePath();
   ctx.fill();
-  // Dark side
   ctx.fillStyle = jerseyDark;
   ctx.beginPath();
   ctx.moveTo(px - 14, py - 40);
@@ -581,14 +581,11 @@ function drawPlayer(ctx: CanvasRenderingContext2D, state: GameState, groundY: nu
   ctx.lineTo(px - 12, py - 76);
   ctx.closePath();
   ctx.fill();
-  // Red stripe accents (Pistons style)
-  ctx.fillStyle = '#c8102e';
+  ctx.fillStyle = jersey.secondary;
   ctx.fillRect(px - 12, py - 76, 24, 3);
   ctx.fillRect(px - 14, py - 43, 28, 3);
-  // White pinstripe
   ctx.fillStyle = '#ffffff55';
   ctx.fillRect(px - 1, py - 76, 2, 36);
-  // Jersey number: #2 (Cade Cunningham)
   ctx.fillStyle = '#ffffff';
   ctx.font = 'bold 13px sans-serif';
   ctx.textAlign = 'center';
@@ -728,10 +725,11 @@ function drawPowerMeter(ctx: CanvasRenderingContext2D, state: GameState, groundY
   ctx.fillRect(x, y, w, h * 0.1);
 
   // Ideal zone — uses difficulty-specific values when available
-  const idealPower = state.difficultyConfig?.idealPower ?? CONFIG.IDEAL_POWER;
+  const idealPower = state.shotIdealPower ?? state.difficultyConfig?.idealPower ?? CONFIG.IDEAL_POWER;
   const powerTol = state.difficultyConfig?.powerTolerance ?? CONFIG.POWER_TOLERANCE;
+  const zoneHalf = idealPower * powerTol + CONFIG.NEAR_IDEAL_MAKE_BONUS;
   const idealCenter = y + h - h * idealPower;
-  const zoneH = Math.max(4, h * idealPower * powerTol * 2);
+  const zoneH = Math.max(4, h * zoneHalf * 2);
   ctx.fillStyle = '#00e5ff44';
   ctx.fillRect(x - 2, idealCenter - zoneH / 2, w + 4, zoneH);
   ctx.strokeStyle = '#00e5ff';

@@ -24,7 +24,8 @@ alwaysApply: false
 **Problem**: `checkOutOfBounds` triggered miss when `ball.y > groundY + 30`, so the ball disappeared through the floor.
 **Fix**: Added `checkGroundBounce` that reverses vy with `GROUND_RESTITUTION = 0.65` and applies `GROUND_FRICTION = 0.85` to vx. Tracks `bounceCount` and triggers miss after `MAX_BOUNCES = 5`.
 
-### 2. CRA doesn't support jest `roots` config
-**Problem**: Tests in `tests/` directory were not discovered by CRA's jest runner.
-**Root cause**: CRA only allows overriding a limited set of jest options; `roots` is not one of them.
-**Fix**: Moved tests to `src/__tests__/` which CRA discovers automatically.
+### 2. CRA doesn't support jest `roots` / tests outside `src/`
+**Problem**: Tests in project-root `tests/` were not discovered by CRA's jest runner; imports outside `src/` also fail.
+**Root cause**: CRA only allows a limited set of jest overrides; `roots` is not one of them. Module scope is `src/`.
+**Prior fix**: Moved suites to `src/__tests__/`.
+**Phase 11 resolution**: Canonical location is **`src/tests/*.test.ts`** (camelCase base + CRA-required `.test.ts` suffix). Root `tests/` was moved under `src/`; `__tests__/` retired. Relative imports stay `../engine`, `../utils`.

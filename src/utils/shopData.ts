@@ -1,4 +1,5 @@
 import { ShopItem, BackgroundId } from '../types/game';
+import { clearJerseyProgress } from './jerseyData';
 
 export const SHOP_ITEMS: ShopItem[] = [
   { id: 'park', name: 'Basketball Park', price: 50, description: 'Outdoor courts under blue skies' },
@@ -73,4 +74,14 @@ export function purchaseBackground(id: BackgroundId, currentCoins: number): { su
   unlockBackground(id);
   saveCoins(remaining);
   return { success: true, remainingCoins: remaining };
+}
+
+/** Wipe coins + courts + jerseys. High score is preserved. */
+export function resetEconomyAndUnlocks(): void {
+  try {
+    localStorage.removeItem(COINS_KEY);
+    localStorage.removeItem(STORAGE_KEY);
+    localStorage.setItem(ACTIVE_BG_KEY, 'stadium');
+  } catch {}
+  clearJerseyProgress();
 }

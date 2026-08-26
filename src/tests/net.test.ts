@@ -17,6 +17,10 @@ jest.mock('../utils/shopData', () => ({
   saveCoins: jest.fn(),
 }));
 
+jest.mock('../utils/jerseyData', () => ({
+  getActiveJersey: () => 'det',
+}));
+
 const W = CONFIG.CANVAS_W;
 const H = CONFIG.CANVAS_H;
 
@@ -97,12 +101,13 @@ describe('Net swish', () => {
   it('launching a make should start the net swish', () => {
     const state = createInitialState(W, H);
     state.phase = 'charging';
+    state.shotIdealPower = CONFIG.IDEAL_POWER;
     state.chargePower = CONFIG.IDEAL_POWER;
     state.wind = 0;
     launchBall(state);
     for (let i = 0; i < 200; i++) {
       updatePhysics(state, 0.01);
-      if (state.phase === 'falling_through') break;
+      if ((state.phase as string) === 'falling_through') break;
     }
     expect(state.phase).toBe('falling_through');
     expect(state.netSwish).toBe(1);

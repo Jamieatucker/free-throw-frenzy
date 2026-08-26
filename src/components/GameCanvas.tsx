@@ -41,7 +41,7 @@ const GameCanvas: React.FC<Props> = ({ difficulty, onStateChange }) => {
       ref={canvasRef}
       width={CONFIG.CANVAS_W}
       height={CONFIG.CANVAS_H}
-      className="block mx-auto rounded-lg shadow-2xl max-w-full"
+      className="block"
       style={{ touchAction: 'none' }}
     />
   );

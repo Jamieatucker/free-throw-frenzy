@@ -6,15 +6,12 @@ export interface DifficultyConfig {
   label: string;
   description: string;
   color: string;
-  // Layout
   playerXRatio: number;
   hoopXRatio: number;
   rimWidth: number;
   backboardExtendTop: number;
-  // Shot window
   idealPower: number;
   powerTolerance: number;
-  // Physics
   gravity: number;
   restitution: number;
   windRange: number;
@@ -53,7 +50,6 @@ export interface Player {
   baseX: number;
 }
 
-/** Viewport offset in world space. (0, 0) is the default court framing. */
 export interface Camera {
   x: number;
   y: number;
@@ -69,11 +65,24 @@ export type BackgroundId =
   | 'rooftop'
   | 'space';
 
+export type JerseyId =
+  | 'atl' | 'bos' | 'bkn' | 'cha' | 'chi' | 'cle' | 'dal' | 'den' | 'det' | 'gsw'
+  | 'hou' | 'ind' | 'lac' | 'lal' | 'mem' | 'mia' | 'mil' | 'min' | 'nop' | 'nyk'
+  | 'okc' | 'orl' | 'phi' | 'phx' | 'por' | 'sac' | 'sas' | 'tor' | 'uta' | 'was';
+
 export interface ShopItem {
   id: BackgroundId;
   name: string;
   price: number;
   description: string;
+}
+
+export interface JerseyItem {
+  id: JerseyId;
+  name: string;
+  primary: string;
+  secondary: string;
+  price: number;
 }
 
 export interface GameState {
@@ -93,13 +102,14 @@ export interface GameState {
   feedbackTimer: number;
   feedbackType: 'score' | 'miss' | null;
   activeBackground: BackgroundId;
+  activeJersey: JerseyId;
+  /** Ideal charge power for the current free throw (re-rolled each reset). */
+  shotIdealPower: number;
   bounceCount: number;
   difficulty: Difficulty;
   difficultyConfig: DifficultyConfig;
   camera: Camera;
-  /** 1 just after a make, decays to 0 — drives net snap-back sway. */
   netSwish: number;
-  /** True once the ball has been fully above the rim this shot (before any ground bounce). */
   passedAboveRim: boolean;
   paused: boolean;
 }

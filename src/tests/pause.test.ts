@@ -12,6 +12,10 @@ jest.mock('../utils/shopData', () => ({
   getSavedCoins: () => 0,
 }));
 
+jest.mock('../utils/jerseyData', () => ({
+  getActiveJersey: () => 'det',
+}));
+
 describe('Pause', () => {
   const W = CONFIG.CANVAS_W;
   const H = CONFIG.CANVAS_H;

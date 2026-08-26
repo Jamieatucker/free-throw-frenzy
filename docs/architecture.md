@@ -3,82 +3,75 @@
 ## High-Level Overview
 
 ```mermaid
-flowchart LR
-    subgraph React["React App"]
-        App["App.tsx"]
-        Canvas["GameCanvas.tsx\n(single <canvas>)"]
-        HUD["HUD.tsx\n(score, streak, timer)"]
-        Shop["Shop.tsx (side overlay)"]
-    end
-
-    subgraph Engine["Game Engine (pure TS)"]
-        Loop["gameLoop.ts\n(requestAnimationFrame)"]
-        Physics["physics.ts\n(solveArcVelocity, collision)"]
-        Camera["camera.ts\n(vertical follow, no X pan)"]
-        Input["input.ts\n(keyboard + touch)"]
-        Renderer["renderer.ts\n(cel-shaded canvas)"]
-        State["gameState.ts\n(score, streak, timer, ball)"]
-        Audio["audio.ts\n(Web Audio API)"]
-        Cfg["config.ts\n(all constants)"]
-    end
-
-    EB["ErrorBoundary"] --> App
-    App --> Canvas
-    App --> HUD
-    Canvas --> Loop
-    Loop --> Physics
-    Loop --> Camera
-    Loop --> Renderer
-    Loop --> State
-    Camera --> Renderer
-    Input --> State
+flowchart TD
+  App --> CrtShell
+  CrtShell --> MainMenu
+  CrtShell --> GameView
+  GameView --> GameCanvas
+  GameView --> HUD
+  GameView --> Shop
+  Shop --> CourtsTab
+  Shop --> JerseysTab
+  CrtShell --> TvControls
+  TvControls -->|RestartWipe| ShopData
+  TvControls -->|Menu| MainMenu
+  GameCanvas --> Loop
+  Loop --> Physics
+  Loop --> Camera
+  Loop --> Renderer
+  Physics -->|perShotIdeal_plus4pct| LaunchBall
+  Renderer -->|jerseyColors| PlayerDraw
 ```
 
 ## Component Responsibilities
 
 | Component | File | Role |
 |-----------|------|------|
-| App | `src/App.tsx` | Root; mounts Canvas + HUD |
-| GameCanvas | `src/components/GameCanvas.tsx` | Owns `<canvas>`, starts game loop, resets camera on remount |
-| HUD | `src/components/HUD.tsx` | React overlay for score/streak/timer |
-| gameLoop | `src/engine/gameLoop.ts` | rAF loop; calls update + render each frame |
-| physics | `src/engine/physics.ts` | Gravity, trajectory, collision detection |
-| camera | `src/engine/camera.ts` | Vertical follow-cam so high-arc shots stay on screen |
-| input | `src/engine/input.ts` | Spacebar / touch listeners; charge tracking |
-| renderer | `src/engine/renderer.ts` | All canvas draw calls (court, player, ball, hoop) |
-| gameState | `src/engine/gameState.ts` | Central mutable state object |
+| App | `src/App.tsx` | Screen routing (`menu` \| `game`); coins/pause/shop wiring |
+| CrtShell | `src/components/CrtShell.tsx` *(Phase 11)* | CRT bezel + screen glass; wraps menu + game; TV Restart/Menu |
+| MainMenu | `src/components/MainMenu.tsx` | Difficulty picker inside CRT screen |
+| GameCanvas | `src/components/GameCanvas.tsx` | Canvas + game loop mount |
+| HUD | `src/components/HUD.tsx` | Score/streak/timer overlay |
+| Shop | `src/components/Shop.tsx` | Side overlay; Courts + Jerseys tabs |
+| shopData | `src/utils/shopData.ts` | Coins, backgrounds; restart wipe helpers |
+| jerseyData | `src/utils/jerseyData.ts` *(Phase 11)* | 30 NBA teams; unlock/active persistence |
+| physics | `src/engine/physics.ts` | Trajectory; per-shot ideal; +4% near-zone bonus |
+| camera | `src/engine/camera.ts` | Vertical follow only |
+| renderer | `src/engine/renderer.ts` | Cel-shaded draws; jersey color tint |
+| input | `src/engine/input.ts` | Spacebar + touch charge |
+| gameLoop | `src/engine/gameLoop.ts` | rAF update/render |
 
 ## Data Flow (per frame)
-1. `input.ts` updates charge/power in `gameState`.
-2. `gameLoop.ts` calls `physics.update(dt)` → moves ball, checks collisions.
-3. `gameLoop.ts` calls `camera.updateCamera(dt)` → pans Y to keep a high-arc ball on screen (never pans X).
-4. `gameLoop.ts` calls `renderer.draw(state)` → applies camera transform, redraws the world, then draws screen-space HUD.
-5. On score/miss event, `gameState` updates score/streak/multiplier; React HUD re-renders via callback.
+1. Input updates charge in `gameState`.
+2. Physics updates ball / collisions; launch uses **per-shot ideal** + **+4%** near-zone make boost.
+3. Camera pans Y if needed.
+4. Renderer draws world (jersey colors from active team) then screen-space overlays.
+5. React HUD/Shop read state via callbacks.
+
+## Restart Wipe Flow
+`TvControls.Restart` → clear coins/unlocked BGs/jerseys in localStorage → remount game key / reset UI coin state. High score key untouched.
 
 ## Directory Layout
 ```
 free-throw-frenzy/
-├── public/          # index.html, manifest
+├── public/
 ├── src/
 │   ├── App.tsx
-│   ├── components/  # GameCanvas, HUD
-│   ├── engine/      # gameLoop, physics, camera, input, renderer, gameState
-│   ├── styles/      # Tailwind + CSS files
-│   └── types/       # shared TS interfaces
-├── tests/           # unit tests
-├── utils/           # reusable helpers
-├── docs/            # memory files
-├── tasks/           # planning files
-└── diagrams/        # mermaid diagram files
+│   ├── components/   # CrtShell, MainMenu, GameCanvas, HUD, Shop, …
+│   ├── engine/
+│   ├── styles/       # index.css, crtTv.css (Phase 11)
+│   ├── types/
+│   ├── utils/        # shopData, jerseyData, difficultyData, …
+│   └── tests/        # camelCase unit tests (CRA-safe; was root tests/ + __tests__)
+├── docs/
+├── tasks/
+└── diagrams/
 ```
 
 ## Key Decisions
-- **No game engine**: Custom physics keeps bundle tiny and demonstrates skill.
-- **Single canvas**: Simpler compositing; HUD is a React overlay, not drawn on canvas.
-- **State outside React**: Game state is a plain TS object mutated each frame for performance; React only reads it for HUD via callbacks/refs.
-- **Exact arc solver**: `solveArcVelocity` computes the initial velocity vector needed to hit a target at a given peak height, guaranteeing makeable shots.
-- **Cel-shaded rendering**: Multi-tone fills with consistent dark outlines for a stylized cartoon look.
-- **Web Audio API**: Synthesized sounds (no audio files) — keeps bundle small and loads instantly.
-- **Error boundary**: Prevents full-page crashes; offers recovery UI.
-- **Config module**: Single source of truth for all tunable game constants.
-- **Vertical follow camera**: `camera.ts` pans the viewport up when a shot peaks above the canvas, then lerps back. Horizontal overshoot and side-bounces are not tracked — those misses still leave the screen.
+- **CRT is DOM/CSS**, not canvas — keeps game loop untouched and responsive.
+- **Jerseys = colors only** (30 teams); no logo assets.
+- **Restart is destructive** to economy/unlocks by design (glitch fail-safe).
+- **Ideal power is per-shot state**, not only difficulty baseline.
+- **Tests under `src/tests/`** so CRA imports work without eject.
+- Existing: custom physics, single canvas, vertical camera, Web Audio, config module.

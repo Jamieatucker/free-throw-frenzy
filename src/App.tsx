@@ -5,8 +5,9 @@ import Shop from './components/Shop';
 import MainMenu from './components/MainMenu';
 import PauseMenu from './components/PauseMenu';
 import ErrorBoundary from './components/ErrorBoundary';
-import { GameState, BackgroundId, Difficulty } from './types/game';
-import { getSavedCoins, getActiveBackground } from './utils/shopData';
+import CrtShell from './components/CrtShell';
+import { GameState, BackgroundId, Difficulty, JerseyId } from './types/game';
+import { getSavedCoins, getActiveBackground, resetEconomyAndUnlocks } from './utils/shopData';
 import { isSfxMuted, isMusicMuted, setSfxMuted, setMusicMuted } from './utils/audioSettings';
 import { setPaused } from './engine/gameState';
 import { startMusic, stopMusic, setMusicPlayingMuted } from './engine/music';
@@ -23,6 +24,7 @@ const App: React.FC = () => {
   const [totalCoins, setTotalCoins] = useState(getSavedCoins);
   const [sfxMuted, setSfxMutedUi] = useState(isSfxMuted);
   const [musicMuted, setMusicMutedUi] = useState(isMusicMuted);
+  const [menuEpoch, setMenuEpoch] = useState(0);
   const gameStateRef = useRef<GameState | null>(null);
 
   const handleStart = useCallback((diff: Difficulty) => {
@@ -47,11 +49,25 @@ const App: React.FC = () => {
     }
   }, []);
 
-  const onRestart = useCallback(() => {
+  const onRestartSoft = useCallback(() => {
     setTotalCoins(getSavedCoins());
     setKey((k) => k + 1);
     setHudState(null);
   }, []);
+
+  /** CRT Restart: wipe economy + unlocks, keep high score, remount. */
+  const handleHardRestart = useCallback(() => {
+    if (gameStateRef.current) setPaused(gameStateRef.current, false);
+    stopMusic();
+    resetEconomyAndUnlocks();
+    setTotalCoins(0);
+    setShopOpen(false);
+    setHudState(null);
+    setKey((k) => k + 1);
+    setMenuEpoch((e) => e + 1);
+    if (screen === 'menu') return;
+    setScreen('game');
+  }, [screen]);
 
   const handleMainMenu = useCallback(() => {
     if (gameStateRef.current) setPaused(gameStateRef.current, false);
@@ -59,6 +75,7 @@ const App: React.FC = () => {
     setHudState(null);
     setShopOpen(false);
     setScreen('menu');
+    setMenuEpoch((e) => e + 1);
   }, []);
 
   const handleOpenShop = useCallback(() => {
@@ -74,6 +91,12 @@ const App: React.FC = () => {
       startMusic(bg).catch(() => {});
     }
   }, [screen]);
+
+  const handleJerseyChange = useCallback((id: JerseyId) => {
+    if (gameStateRef.current) {
+      gameStateRef.current.activeJersey = id;
+    }
+  }, []);
 
   const handlePause = useCallback(() => {
     if (!gameStateRef.current) return;
@@ -112,47 +135,54 @@ const App: React.FC = () => {
   if (screen === 'menu') {
     return (
       <ErrorBoundary>
-        <MainMenu onStart={handleStart} />
+        <CrtShell showRestart onRestart={handleHardRestart}>
+          <MainMenu key={menuEpoch} onStart={handleStart} />
+        </CrtShell>
       </ErrorBoundary>
     );
   }
 
   return (
     <ErrorBoundary>
-      <div className="min-h-screen bg-gray-900 flex flex-col items-center justify-center p-4">
-        <h1 className="text-3xl font-bold text-white mb-4 tracking-wider">
-          Free Throw Frenzy
-        </h1>
-        <div className="relative">
-          <GameCanvas key={key} difficulty={difficulty} onStateChange={onStateChange} />
-          <HUD
-            state={hudState}
-            onRestart={onRestart}
-            onOpenShop={handleOpenShop}
-            onMainMenu={handleMainMenu}
-            onPause={handlePause}
-          />
-          {hudState?.paused && (
-            <PauseMenu
-              difficulty={difficulty}
-              sfxMuted={sfxMuted}
-              musicMuted={musicMuted}
-              onResume={handleResume}
-              onToggleSfx={handleToggleSfx}
-              onToggleMusic={handleToggleMusic}
+      <CrtShell
+        showRestart
+        onRestart={handleHardRestart}
+        onMenu={handleMainMenu}
+        screenClassName="crt-screen--game"
+      >
+        <div className="crt-game-stage">
+          <div className="crt-game-fit">
+            <GameCanvas key={key} difficulty={difficulty} onStateChange={onStateChange} />
+            <HUD
+              state={hudState}
+              onRestart={onRestartSoft}
+              onOpenShop={handleOpenShop}
               onMainMenu={handleMainMenu}
+              onPause={handlePause}
             />
-          )}
-          {shopOpen && (
-            <Shop
-              coins={totalCoins}
-              onClose={() => setShopOpen(false)}
-              onCoinsChange={(c) => setTotalCoins(c)}
-              onBackgroundChange={handleBackgroundChange}
-            />
-          )}
+            {hudState?.paused && (
+              <PauseMenu
+                difficulty={difficulty}
+                sfxMuted={sfxMuted}
+                musicMuted={musicMuted}
+                onResume={handleResume}
+                onToggleSfx={handleToggleSfx}
+                onToggleMusic={handleToggleMusic}
+                onMainMenu={handleMainMenu}
+              />
+            )}
+            {shopOpen && (
+              <Shop
+                coins={totalCoins}
+                onClose={() => setShopOpen(false)}
+                onCoinsChange={(c) => setTotalCoins(c)}
+                onBackgroundChange={handleBackgroundChange}
+                onJerseyChange={handleJerseyChange}
+              />
+            )}
+          </div>
         </div>
-      </div>
+      </CrtShell>
     </ErrorBoundary>
   );
 };

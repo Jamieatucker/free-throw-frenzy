@@ -5,6 +5,10 @@ jest.mock('../utils/shopData', () => ({
   getActiveBackground: () => 'stadium',
 }));
 
+jest.mock('../utils/jerseyData', () => ({
+  getActiveJersey: () => 'det',
+}));
+
 describe('GameState', () => {
   const W = CONFIG.CANVAS_W;
   const H = CONFIG.CANVAS_H;
@@ -20,6 +24,9 @@ describe('GameState', () => {
     expect(state.chargePower).toBe(0);
     expect(state.bounceCount).toBe(0);
     expect(state.activeBackground).toBe('stadium');
+    expect(state.activeJersey).toBe('det');
+    expect(state.shotIdealPower).toBeGreaterThanOrEqual(0.35);
+    expect(state.shotIdealPower).toBeLessThanOrEqual(0.85);
     expect(state.difficulty).toBe('medium');
     expect(state.camera.x).toBe(0);
     expect(state.camera.y).toBe(0);

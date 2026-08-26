@@ -13,7 +13,8 @@ alwaysApply: false
 ## Preferences
 - Minimal dependencies: no Phaser, Matter.js, or similar engines.
 - Vector-only graphics (canvas arcs/rects) — no image assets for v1.
-- Tailwind for all UI styling; no additional CSS frameworks.
+- Tailwind for UI; Phase 11 CRT extras in `src/styles/crtTv.css` (not root App.css).
+- Memory Files stay short (bullets/tables) so ACT mode can implement under token limits.
 
 ## Known Challenges
 - CRA + TypeScript requires renaming .js → .tsx and adding tsconfig.json.
@@ -34,3 +35,7 @@ alwaysApply: false
 | 2026-08-19 | Ground bounce vs out-of-bounds | Separate checkGroundBounce before checkOutOfBounds; bounce count limits prevent infinite loops |
 | 2026-08-19 | Utils must be in src/ | CRA enforces import boundary; all shared code goes in src/utils/ |
 | 2026-08-19 | Shop persistence in localStorage | Separate keys for unlocked bgs, active bg, and coins; graceful fallback on error |
+| 2026-08-26 | CRT shell as DOM/CSS not canvas | Keeps 60 FPS engine untouched; easier responsive bezel |
+| 2026-08-26 | Jerseys = 30 teams, colors only | Max customization without logo/IP assets |
+| 2026-08-26 | Per-shot ideal + 4% near-zone bonus | Varies perfect release; rewards precision without removing max-power penalty |
+| 2026-08-26 | Tests at `src/tests/` camelCase | CRA-safe imports; root `tests/` moved under `src/` |

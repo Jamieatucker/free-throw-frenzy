@@ -1,0 +1,289 @@
+.crt-page {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  background:
+    radial-gradient(ellipse at 50% 20%, #2a2a32 0%, transparent 55%),
+    linear-gradient(160deg, #1a1a1e 0%, #0c0c0e 50%, #161618 100%);
+  box-sizing: border-box;
+}
+
+.crt-tv {
+  --crt-bezel: #3a3a3e;
+  --crt-bezel-dark: #2a2a2e;
+  --crt-bezel-light: #4a4a50;
+  width: min(96vw, 920px);
+  display: flex;
+  flex-direction: column;
+  background: linear-gradient(145deg, var(--crt-bezel-light) 0%, var(--crt-bezel) 40%, var(--crt-bezel-dark) 100%);
+  border-radius: 18px 18px 12px 12px;
+  padding: 14px 14px 0;
+  box-shadow:
+    0 24px 48px rgba(0, 0, 0, 0.55),
+    inset 0 1px 0 rgba(255, 255, 255, 0.12),
+    inset 0 -2px 0 rgba(0, 0, 0, 0.35);
+}
+
+.crt-bezel-inner {
+  border-radius: 6px;
+  padding: 10px;
+  background: linear-gradient(180deg, #1c1c1e 0%, #121214 100%);
+  box-shadow:
+    inset 0 0 0 2px #0a0a0c,
+    inset 0 8px 20px rgba(0, 0, 0, 0.65);
+}
+
+.crt-screen-wrap {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  max-height: min(72vh, 640px);
+  /* Keep 4:3 when max-height wins: shrink width to match height */
+  max-width: min(100%, calc(min(72vh, 640px) * 4 / 3));
+  margin-inline: auto;
+  border-radius: 4px;
+  overflow: hidden;
+  background: #1a1f1a;
+  transform: perspective(900px) rotateX(1.2deg);
+  box-shadow: inset 0 0 40px rgba(0, 0, 0, 0.45);
+}
+
+.crt-screen {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  justify-content: stretch;
+  background: #0d1110;
+}
+
+.crt-screen--game {
+  overflow: hidden;
+  background: #111827;
+}
+
+.crt-screen-content {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  justify-content: stretch;
+  overflow: hidden;
+}
+
+/* Game stage: letterbox inside CRT; play area keeps 9:5 (900×500) */
+.crt-game-stage {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #0a0e14;
+  container-type: size;
+}
+
+.crt-game-fit {
+  position: relative;
+  /* Contain 9:5 game inside CRT without stretching */
+  width: min(100cqw, calc(100cqh * 9 / 5));
+  height: min(100cqh, calc(100cqw * 5 / 9));
+  max-width: 100%;
+  max-height: 100%;
+}
+
+/* Fallback when container queries unavailable (CRT is 4:3, game is wider → width-limited) */
+@supports not (width: 1cqw) {
+  .crt-game-fit {
+    aspect-ratio: 9 / 5;
+    width: 100%;
+    height: auto;
+    max-height: 100%;
+  }
+}
+
+.crt-game-fit canvas {
+  display: block;
+  width: 100% !important;
+  height: 100% !important;
+  max-width: none !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  object-fit: contain;
+}
+
+.crt-scanlines {
+  pointer-events: none;
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  background: repeating-linear-gradient(
+    0deg,
+    rgba(0, 0, 0, 0.12) 0px,
+    rgba(0, 0, 0, 0.12) 1px,
+    transparent 1px,
+    transparent 3px
+  );
+  mix-blend-mode: multiply;
+  opacity: 0.55;
+}
+
+.crt-glass-glare {
+  pointer-events: none;
+  position: absolute;
+  left: 8%;
+  right: 8%;
+  top: 0;
+  height: 28%;
+  z-index: 3;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.18) 0%, transparent 100%);
+  border-radius: 0 0 40% 40%;
+  opacity: 0.35;
+}
+
+.crt-panel {
+  display: grid;
+  grid-template-columns: 1.2fr 1fr 1.4fr;
+  gap: 10px;
+  padding: 12px 8px 14px;
+  align-items: center;
+}
+
+.crt-speaker {
+  height: 44px;
+  border-radius: 4px;
+  background:
+    radial-gradient(circle, #1a1a1c 1px, transparent 1.5px) 0 0 / 4px 4px,
+    #2e2e32;
+  box-shadow: inset 0 0 0 1px #1a1a1c, inset 0 2px 4px rgba(0, 0, 0, 0.4);
+}
+
+.crt-panel-blank {
+  height: 36px;
+  border-radius: 3px;
+  background: #333338;
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.5);
+}
+
+.crt-controls {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.crt-ir {
+  width: 14px;
+  height: 14px;
+  border-radius: 2px;
+  background: #0a0a0a;
+  box-shadow: inset 0 0 0 1px #222;
+}
+
+.crt-standby {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 8px;
+  letter-spacing: 0.06em;
+  color: #888;
+  text-transform: uppercase;
+  font-family: ui-monospace, monospace;
+}
+
+.crt-standby-led {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #c62828;
+  box-shadow: 0 0 6px #ef5350;
+}
+
+.crt-btn {
+  min-width: 44px;
+  min-height: 44px;
+  padding: 0 12px;
+  border: none;
+  border-radius: 3px;
+  background: linear-gradient(180deg, #4a4a50 0%, #2e2e32 100%);
+  color: #ddd;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  cursor: pointer;
+  box-shadow:
+    0 2px 0 #1a1a1c,
+    inset 0 1px 0 rgba(255, 255, 255, 0.15);
+  transition: transform 0.08s ease, filter 0.12s ease;
+}
+
+.crt-btn:hover {
+  filter: brightness(1.08);
+}
+
+.crt-btn:active {
+  transform: translateY(1px);
+  box-shadow: 0 1px 0 #1a1a1c, inset 0 2px 4px rgba(0, 0, 0, 0.4);
+}
+
+.crt-btn--power {
+  background: linear-gradient(180deg, #5a5a60 0%, #2a2a2e 100%);
+  color: #fff;
+}
+
+.crt-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.crt-feet {
+  display: flex;
+  justify-content: space-between;
+  padding: 0 28px 6px;
+}
+
+.crt-foot {
+  width: 48px;
+  height: 6px;
+  border-radius: 0 0 3px 3px;
+  background: #252528;
+  box-shadow: 0 2px 0 #0a0a0a;
+}
+
+@media (max-width: 640px) {
+  .crt-tv {
+    padding: 10px 10px 0;
+    border-radius: 14px;
+  }
+
+  .crt-screen-wrap {
+    max-height: min(62vh, 480px);
+    max-width: min(100%, calc(min(62vh, 480px) * 4 / 3));
+    transform: none;
+  }
+
+  .crt-panel {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+
+  .crt-speaker,
+  .crt-panel-blank {
+    display: none;
+  }
+
+  .crt-controls {
+    justify-content: center;
+  }
+}

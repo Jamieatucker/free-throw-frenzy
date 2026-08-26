@@ -7,6 +7,10 @@ export const CONFIG = {
   SHOT_TIMER: 10,
   IDEAL_POWER: 0.55,
   POWER_TOLERANCE: 0.03,
+  /** Absolute widen of ideal zone on the 0–1 power meter (+4% make window). */
+  NEAR_IDEAL_MAKE_BONUS: 0.04,
+  /** How far per-shot ideal may drift from difficulty baseline. */
+  SHOT_IDEAL_JITTER: 0.08,
   MAX_POWER_ACCURACY_PENALTY: 0.45,
   MAX_MULTIPLIER: 10,
   FEEDBACK_DURATION: 1.2,

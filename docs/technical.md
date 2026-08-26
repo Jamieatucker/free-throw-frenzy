@@ -5,77 +5,58 @@
 |-------|-----------|
 | Language | TypeScript 5.x |
 | UI Framework | React 19 |
-| Styling | Tailwind CSS 3.x |
-| Build Tool | Create React App (react-scripts 5) |
-| Testing | Jest + React Testing Library |
-| Canvas | HTML5 Canvas 2D API |
+| Styling | Tailwind CSS 3.x + `src/styles/*.css` |
+| Build | Create React App (react-scripts 5) |
+| Testing | Jest + RTL; suites in `src/tests/` (camelCase) |
+| Canvas | HTML5 Canvas 2D |
 
 ## Development Setup
 ```bash
 cd free-throw-frenzy
-npm install        # installs deps (typescript already present)
-npm start          # dev server on localhost:3000
-npm test           # jest watch mode
-npm run build      # production bundle
+npm install
+npm start          # localhost:3000
+npm test           # jest
+npm run build
 ```
 
-## Key Technical Decisions
+## Phase 11 — CRT Shell
+- Component: `CrtShell` wraps children in bezel + 4:3 screen region.
+- Styles: `src/styles/crtTv.css` (imported from `styles/index.css`): dark matte bezel, inner step shadow, scanline overlay, subtle spherical warp (`perspective` / mild `transform` or mask), bottom speaker/controls strip.
+- Responsive: scale CRT to viewport (`max-width`/`max-height`, `object-fit`-like containment); touch targets ≥44px on Restart/Menu.
+- Do not use root `App.css`; keep CSS under `src/styles/`.
 
-### Physics Model
-- **Gravity**: constant `g = 680 px/s²` (scaled for canvas, configured in `config.ts`).
-- **Wind**: random horizontal acceleration ±30 px/s², re-rolled per shot.
-- **Ball trajectory**: `solveArcVelocity` computes exact initial velocity to land ball at target with a specified peak height. Euler integration each frame.
-- **Collision**: circle-circle (ball vs rim endpoints), circle-rect (ball vs backboard). Bounce uses coefficient of restitution 0.5.
-- **Shot guarantee**: At ideal power (55% ± 3%), the ball is aimed directly at rim center — always makeable.
+## Phase 11 — Restart Wipe API
+Helpers on `shopData` (+ jersey helpers): `resetEconomyAndUnlocks()` clears coins, unlocked/active backgrounds, unlocked/active jerseys. Preserve high-score localStorage key. App remounts via `key++` after wipe.
 
-### Input Handling
-- Desktop: `keydown`/`keyup` on spacebar. Charge accumulates while held.
-- Mobile: `touchstart`/`touchend`. Same charge logic.
-- Charge rate: 0 → 1 over ~1.5 seconds. Release value maps to shot power.
+## Phase 11 — Jerseys (30 NBA teams)
+- `src/utils/jerseyData.ts`: `{ id, name, primary, secondary, price }[]` for all current teams.
+- Persist like BGs: `ftf_unlocked_jerseys`, `ftf_active_jersey`.
+- Default active: current Pistons-style / free starter.
+- `renderer` reads active jersey colors when drawing player torso/trim.
+- Shop: tabs **Courts** | **Jerseys**.
 
-### Shot Window Tolerance
-- Ideal power for a make is computed from player distance to hoop.
-- Accepted range: `idealPower ± 3%`. Within this window the ball trajectory is nudged to go in.
+## Physics & Shot Window
+- Baseline ideals still live on `DifficultyConfig`; each shot sets `state.shotIdealPower` (re-roll around difficulty ideal).
+- Zone: `|power - shotIdealPower| <= shotIdealPower * powerTolerance`.
+- Near-zone make boost: `NEAR_IDEAL_MAKE_BONUS = 0.04` — widen effective tolerance by 4% **or** equivalent soft aim nudge when inside base zone (pick one implementation; keep tested).
+- Max power ≥0.99: keep `MAX_POWER_ACCURACY_PENALTY`.
+- Gravity/wind/collision unchanged in spirit (`config.ts` + difficulty overrides).
 
-### Rendering Pipeline (60 FPS) — Cel-Shaded Style
-1. Clear canvas.
-2. Apply camera transform (`translate(-camera.x, -camera.y)`). World drawing is in world space.
-3. Draw sky (gradient + stars), extending above y=0 when the camera has panned up.
-4. Draw court (3-band cel shading + dashed free-throw line + pole).
-5. Draw backboard + rim + net (cel-shaded with dark outlines).
-6. Draw player (multi-tone jersey, skin highlight/shadow, hair, animated shooting arm).
-7. Draw ball (dark/light halves, highlight spot, seam curve, cel outline).
-8. Draw power meter with gradient fill + ideal zone highlight.
-9. Draw "on-fire" particles when streak ≥ 5.
-10. Restore transform. Draw screen-space overlays (wind indicator, SWISH/MISS) so they stay pinned to the canvas.
+## Input
+- Desktop: spacebar keydown/keyup charge.
+- Mobile: touchstart/touchend on canvas/screen (`passive: false` where needed).
 
-### Dynamic Camera
-- **Purpose**: Keep the basketball visible on high-arc shots. Ideal-power trajectories already peak above the 500px canvas (`peakY ≈ -40`).
-- **Follow axis**: Y only. `camera.x` is always 0, so overshoots past the hoop and side-bounces still leave the screen.
-- **When it follows**: `phase === 'flying'` and the ball still intersects the canvas horizontally.
-- **When it rests**: idle, charging, scored, missed, falling_through, or the ball has left the left/right edges.
-- **Motion**: exponential lerp toward `ballTop - CAMERA_TOP_MARGIN`, with a short upward look-ahead. Hard clamps keep the ball from clipping the top or bottom if lerp lags.
-- **Reset**: `resetBall` snaps the camera back to `(0, 0)` for the next shot.
-- **Module**: `src/engine/camera.ts`. Tunables live in `config.ts` (`CAMERA_TOP_MARGIN`, `CAMERA_FOLLOW_LERP`, `CAMERA_LOOKAHEAD`).
+## Camera / Render / Audio
+- Vertical follow camera (`camera.ts`); cel-shaded renderer; Web Audio SFX + stage music — unchanged unless jersey tint touches player draw.
 
-### Audio
-- Web Audio API synthesized sounds (no asset files).
-- Shoot: noise burst + triangle tone. Score: ascending 3-note chime. Miss: descending sawtooth.
-- AudioContext created lazily on first interaction; resumed if suspended.
-
-### Performance Constraints
-- No allocations in hot loop (pre-allocate vectors).
-- Canvas size: responsive, max 1280×720.
-- All art is vector (arc, rect, line) — no image assets needed for v1.
+## Testing
+- Canonical path: **`src/tests/*.test.ts`** (camelCase base name + CRA `.test.ts` suffix).
+- CRA `testMatch` requires `*.test.ts` or `src/**/__tests__/**`; bare `*Test.ts` is not discovered.
+- Phase 11: `phase11.test.ts` covers restart wipe, 30 jerseys, ideal re-roll / +4% bonus.
 
 ## Design Patterns
-- **Game State Machine**: `idle → charging → flying → falling_through → scored / missed → reset → idle`.
-- **Observer callbacks**: engine emits events consumed by React HUD via shallow-copy callback.
-- **Separation of concerns**: React owns DOM/UI; engine owns canvas + physics. They share state via refs, not re-renders.
-- **Error Boundary**: Class component wraps entire app; catches render errors with friendly recovery UI.
-- **Config module**: All tunable constants in `src/engine/config.ts` — single source of truth.
+- State machine phases; engine mutates plain `GameState`; React overlays via callbacks.
+- Config module for constants (`NEAR_IDEAL_MAKE_BONUS` in `config.ts`).
 
-## Technical Constraints
-- No external physics/game engines.
-- Minimal npm dependencies.
-- Must run on mobile Safari, Chrome, Firefox.
+## Constraints
+- No external physics engines; minimal deps; mobile Safari/Chrome/Firefox; ≤60 FPS.

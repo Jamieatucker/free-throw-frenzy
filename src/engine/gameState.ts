@@ -1,8 +1,10 @@
 import { GameState, Hoop, Difficulty, DifficultyConfig } from '../types/game';
 import { CONFIG } from './config';
 import { getActiveBackground } from '../utils/shopData';
+import { getActiveJersey } from '../utils/jerseyData';
 import { DIFFICULTY_CONFIGS } from '../utils/difficultyData';
 import { createCamera, resetCamera } from './camera';
+import { rollShotIdealPower } from './physics';
 
 function createHoop(canvasW: number, canvasH: number, dc: DifficultyConfig): Hoop {
   const groundY = canvasH * CONFIG.GROUND_Y_RATIO;
@@ -49,6 +51,8 @@ export function createInitialState(canvasW: number, canvasH: number, difficulty:
     feedbackTimer: 0,
     feedbackType: null,
     activeBackground: getActiveBackground(),
+    activeJersey: getActiveJersey(),
+    shotIdealPower: rollShotIdealPower(dc.idealPower),
     bounceCount: 0,
     difficulty,
     difficultyConfig: dc,
@@ -76,6 +80,7 @@ export function resetBall(state: GameState): void {
   resetCamera(state.camera);
   state.netSwish = 0;
   state.passedAboveRim = false;
+  state.shotIdealPower = rollShotIdealPower(state.difficultyConfig.idealPower);
 }
 
 export function setPaused(state: GameState, paused: boolean): void {

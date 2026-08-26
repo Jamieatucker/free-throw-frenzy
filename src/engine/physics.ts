@@ -23,8 +23,8 @@ function solveArcVelocity(
 export function launchBall(state: GameState): void {
   const dc = state.difficultyConfig;
   const power = state.chargePower;
-  const ideal = dc.idealPower;
-  const tolerance = ideal * dc.powerTolerance;
+  const ideal = state.shotIdealPower;
+  const tolerance = getEffectiveShotTolerance(state);
   const gravity = dc.gravity;
 
   const rimCenterX = (state.hoop.rimLeftX + state.hoop.rimRightX) / 2;
@@ -257,8 +257,21 @@ function checkOutOfBounds(state: GameState): void {
   }
 }
 
-export function computeIdealPower(_state: GameState): number {
-  return _state.difficultyConfig.idealPower;
+export function rollShotIdealPower(baseIdeal: number): number {
+  const jitter = CONFIG.SHOT_IDEAL_JITTER;
+  const rolled = baseIdeal + randomRange(-jitter, jitter);
+  return Math.min(0.85, Math.max(0.35, rolled));
+}
+
+/** Ideal zone width including the +4% near-ideal make bonus. */
+export function getEffectiveShotTolerance(state: GameState): number {
+  const ideal = state.shotIdealPower;
+  const base = ideal * state.difficultyConfig.powerTolerance;
+  return base + CONFIG.NEAR_IDEAL_MAKE_BONUS;
+}
+
+export function computeIdealPower(state: GameState): number {
+  return state.shotIdealPower;
 }
 
 export function isWithinTolerance(power: number, ideal: number, tolerance?: number): boolean {

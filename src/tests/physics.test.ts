@@ -11,6 +11,10 @@ jest.mock('../utils/shopData', () => ({
   saveCoins: jest.fn(),
 }));
 
+jest.mock('../utils/jerseyData', () => ({
+  getActiveJersey: () => 'det',
+}));
+
 jest.mock('../utils/difficultyData', () => {
   const real = jest.requireActual('../utils/difficultyData');
   return real;
@@ -99,6 +103,7 @@ describe('Physics Engine', () => {
   it('should launch ball with velocity when power is at ideal', () => {
     const state = createInitialState(W, H);
     state.phase = 'charging';
+    state.shotIdealPower = CONFIG.IDEAL_POWER;
     state.chargePower = CONFIG.IDEAL_POWER;
     launchBall(state);
     expect(state.phase).toBe('flying');
@@ -109,12 +114,13 @@ describe('Physics Engine', () => {
   it('should produce an arc that can reach the rim at ideal power', () => {
     const state = createInitialState(W, H);
     state.phase = 'charging';
+    state.shotIdealPower = CONFIG.IDEAL_POWER;
     state.chargePower = CONFIG.IDEAL_POWER;
     state.wind = 0;
     launchBall(state);
     for (let i = 0; i < 200; i++) {
       updatePhysics(state, 0.01);
-      if (state.phase !== 'flying') break;
+      if ((state.phase as string) !== 'flying') break;
     }
     expect(['scored', 'falling_through']).toContain(state.phase);
   });
@@ -229,7 +235,7 @@ describe('Physics Engine', () => {
 
     for (let i = 0; i < 80; i++) {
       updatePhysics(state, 0.02);
-      if (state.phase === 'scored') break;
+      if ((state.phase as string) === 'scored') break;
     }
     expect(state.phase).toBe('scored');
     expect(state.ball.opacity).toBe(0);

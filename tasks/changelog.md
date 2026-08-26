@@ -1,5 +1,18 @@
 # Changelog — Free Throw Frenzy
 
+## [0.9.0] — 2026-08-26
+### Added
+- **CRT TV shell**: `CrtShell` + `crtTv.css` wrap Main Menu and game (4:3 glass, scanlines, control panel).
+- **Restart wipe**: clears coins, unlocked courts, and jerseys; keeps high score.
+- **30 NBA jerseys** in Shop (colors only); canvas player tint via `jerseyData` + renderer.
+- **Per-shot ideal power** re-roll + **+4%** near-ideal make window (`NEAR_IDEAL_MAKE_BONUS`).
+- Tests moved to `src/tests/*.test.ts` (camelCase); `phase11.test.ts` covers wipe, jerseys, shot ideal.
+- Docs: `docs/crt_phase11.md`, diagram `diagrams/crtShell.md`.
+
+### Changed
+- Removed blue full-page title chrome; branding lives on the CRT screen.
+- Power meter ideal marker follows `shotIdealPower` and widened tolerance.
+
 ## [0.8.0] — 2026-08-20
 ### Fixed
 - **Physics phase error**: Scoring no longer compares a TypeScript-narrowed `phase === 'flying'` against `'falling_through'`. `checkScore` returns a boolean and the flying tick exits immediately on a make.

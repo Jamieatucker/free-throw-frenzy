@@ -80,15 +80,27 @@
 - [x] `camera_test.ts` — 24 tests (60 total, all passing)
 - [x] Diagram `diagrams/camera.md`; docs + changelog updated
 
-## Future Work (Phase 11+)
-- [ ] Difficulty scaling (wind increases, timer decreases with streak)
+## Phase 11: CRT TV UI + Jerseys + Shot Bonus ✅
+- [x] `CrtShell` + `src/styles/crtTv.css` — bezel, 4:3 glass, scanlines, mild warp; wrap Main Menu + game
+- [x] Replace blue “Free Throw Frenzy” page chrome with CRT presentation
+- [x] TV panel **Restart** / **Menu** controls (mobile-friendly hit targets)
+- [x] Restart wipe: coins + unlocked courts + jerseys; keep high score; remount
+- [x] `jerseyData.ts` — all 30 NBA teams (primary/secondary); shop Jerseys tab
+- [x] Persist unlock/active jersey; tint player in `renderer.ts`
+- [x] Per-shot `shotIdealPower` re-roll; `NEAR_IDEAL_MAKE_BONUS = 0.04` in physics
+- [x] Move root `tests/` → `src/tests/`; migrate `src/__tests__/*` → camelCase `*.test.ts`
+- [x] Unit tests: wipe, jersey shop, ideal re-roll / +4% bonus; all tests pass (106)
+- [x] Feature overview `docs/crt_phase11.md`; Mermaid `diagrams/crtShell.md`; changelog 0.9.0
+
+## Future Work (Phase 12+)
+- [ ] Difficulty scaling (wind/timer with streak)
 - [ ] Screen shake on miss
 - [ ] Responsive canvas sizing with ResizeObserver
-- [ ] Ball skins / hoop paints in shop
+- [ ] Ball skins / hoop paints
 - [ ] Leaderboard backend
 
 ## Known Issues
 - None.
 
 ## Current Status
-v0.7.0 — 60 tests, all passing. Dynamic vertical camera keeps high-arc shots on screen without chasing overshoots or side-bounces.
+v0.9.0 — Phase 11 complete. 106 tests passing. CRT UI + 30 jerseys + per-shot ideal (+4%).
