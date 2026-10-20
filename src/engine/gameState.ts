@@ -34,6 +34,7 @@ export function createInitialState(canvasW: number, canvasH: number, difficulty:
       vel: { x: 0, y: 0 },
       radius: CONFIG.BALL_RADIUS,
       rotation: 0,
+      prevX: playerX + 20,
       prevY: groundY - 80,
       opacity: 1,
     },
@@ -59,6 +60,8 @@ export function createInitialState(canvasW: number, canvasH: number, difficulty:
     camera: createCamera(),
     netSwish: 0,
     passedAboveRim: false,
+    bankedOffGlass: false,
+    frontRimLatched: false,
     paused: false,
   };
 }
@@ -70,6 +73,7 @@ export function resetBall(state: GameState): void {
   state.ball.vel.x = 0;
   state.ball.vel.y = 0;
   state.ball.rotation = 0;
+  state.ball.prevX = state.player.x + 20;
   state.ball.prevY = groundY - 80;
   state.ball.opacity = 1;
   state.chargePower = 0;
@@ -80,6 +84,8 @@ export function resetBall(state: GameState): void {
   resetCamera(state.camera);
   state.netSwish = 0;
   state.passedAboveRim = false;
+  state.bankedOffGlass = false;
+  state.frontRimLatched = false;
   state.shotIdealPower = rollShotIdealPower(state.difficultyConfig.idealPower);
 }
 

@@ -29,6 +29,8 @@ export interface Ball {
   vel: Vec2;
   radius: number;
   rotation: number;
+  /** Position at the start of the current physics substep, for swept collision. */
+  prevX: number;
   prevY: number;
   opacity: number;
 }
@@ -111,6 +113,10 @@ export interface GameState {
   camera: Camera;
   netSwish: number;
   passedAboveRim: boolean;
+  /** This shot has rebounded off the court side of the glass. */
+  bankedOffGlass: boolean;
+  /** Front-rim bounce already applied; ignore repeat hits until the ball is clear. */
+  frontRimLatched: boolean;
   paused: boolean;
 }
 

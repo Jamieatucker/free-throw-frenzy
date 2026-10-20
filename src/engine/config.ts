@@ -25,6 +25,12 @@ export const CONFIG = {
   BALL_RADIUS: 14,
   RIM_RADIUS: 5,
   BACKBOARD_WIDTH: 14,
+  /** Fixed integration step so the ball cannot tunnel through the rim or glass. */
+  PHYSICS_SUBSTEP: 1 / 120,
+  /** Tangential speed lost on the glass. A pebbled ball grips a little, then rebounds. */
+  BACKBOARD_FRICTION: 0.12,
+  /** Tangential speed lost on the rim iron. */
+  RIM_FRICTION: 0.2,
   BACKBOARD_EXTEND_TOP: 95,
   MAX_BOUNCES: 2,
   GROUND_FRICTION: 0.85,

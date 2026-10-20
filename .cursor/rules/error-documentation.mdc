@@ -20,6 +20,31 @@ alwaysApply: false
 **Problem**: Players could hold spacebar indefinitely and always score by releasing at max power (power=1.0 still produced accurate shots).
 **Fix**: Added auto-fire at power >= 0.99 with `MAX_POWER_ACCURACY_PENALTY = 0.45` — applies ±135px random offset to target, making max-power shots wildly inaccurate.
 
+### 10. Net freeze and top-front rim stutter
+**Problem**: A ball that bounced up into the net stopped for a few milliseconds. A ball on the top-front iron also stuttered instead of rebounding in one motion.
+**Root cause**: Any center inside the net cylinder was snapped back to the rim of that opening and its velocity was reversed, including a ball rising from below. The front iron then reapplied a new bounce every substep, replacing the rebound velocity each time.
+**Fix**: Rising into the net from below keeps the ball's velocity. Only a downward crossing from above the rim is a swish. The top-front iron reflects the incoming velocity once and ignores repeat contacts until the ball has left, so the rebound stays one continuous arc.
+
+### 9. Bank shot teleports out of the rim
+**Problem**: A ball that hit the glass and dropped into the cylinder was shoved outside the rim and scored as a miss.
+**Root cause**: The back iron sits against the glass, so a ball resting on the board has its center inside the opening and overlaps that iron. Rim collision then relocated the center outside the cylinder before the downward crossing could count. A glass hit on the same step as the crossing also failed the swish test, because the previous position was still in the board, and the net guard threw the ball back out.
+**Fix**: While the center is in the opening and still dropping from above the rim, the iron does not move it. A glass rebound that lands in the opening as it crosses the rim plane counts as a make. Shots that bounce off the front iron, come up off the floor, or never reach the rim still miss.
+
+### 8. Ball sticks on the front of the rim
+**Problem**: A shot that hit the near iron could stay there, so the ball never reached the floor and the shot never became a miss.
+**Root cause**: Front-rim contact snapped the ball back onto the circle every substep, which cancelled the bounce away from the hoop.
+**Fix**: A hit on the front rim places the ball just court-side of the iron, sends it back toward the shooter, and blocks a swish. The ball then falls and the shot is a miss.
+
+### 7. Ball sticks on the top of the front rim
+**Problem**: A shot that landed on the top-front iron stayed there. Every physics substep gravity re-embedded the ball, the rim bounce played again, and the shot never left `flying`, so the game was soft-locked under a loud rattle.
+**Root cause**: The crown contact normal points straight up. Restitution plus a fresh gravity step each 1/120s kept the approach speed just high enough to count as a new bounce, and horizontal speed stayed near zero so the ball never rolled off.
+**Fix**: A slow contact on the crown no longer bounces or plays a sound. If that contact is the front rim and the ball is barely moving sideways, it is given a small velocity toward the court so it falls off and the shot can end.
+
+### 6. Ball teleports into the net
+**Problem**: Shots sometimes jumped into the middle of the net instead of falling through the rim or bouncing off the iron and glass.
+**Root cause**: Backboard response snapped the ball to a fixed x (`backboardX - radius` or the far side of the board) whenever the circles overlapped, including when the ball was already moving away. That x sits inside the rim opening, so a graze on the glass became an instant relocation into the net. Rim collision was also skipped whenever the ball had been above the rim, and a single frame step was long enough to tunnel through the iron.
+**Fix**: Integrate flight in 1/120s substeps. The glass matches the drawn backboard and only separates the ball by the real overlap (swept against the face it actually hits). The rim iron is always solid during flight and is swept, so a miss rebounds with restitution and a little friction. The center may enter the net only by crossing the opening from above; any other intrusion is pushed back to the rim of that opening and bounced. A legal make still falls through under gravity.
+
 ### 5. Ball phasing through ground
 **Problem**: `checkOutOfBounds` triggered miss when `ball.y > groundY + 30`, so the ball disappeared through the floor.
 **Fix**: Added `checkGroundBounce` that reverses vy with `GROUND_RESTITUTION = 0.65` and applies `GROUND_FRICTION = 0.85` to vx. Tracks `bounceCount` and triggers miss after `MAX_BOUNCES = 5`.

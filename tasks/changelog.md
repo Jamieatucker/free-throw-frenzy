@@ -1,5 +1,16 @@
 # Changelog — Free Throw Frenzy
 
+## [0.10.0] — 2026-10-19
+### Fixed
+- **Under-net pass-through**: A ball that bounces up into the net keeps its momentum. Only a drop through the rim from above counts as a swish.
+- **Top-front rim bounce**: A hit on the top of the front iron rebounds once and keeps that velocity, instead of stuttering against the metal.
+- **Bank-shot make**: A ball that hits the backboard and drops into the rim goes through for a make. It is no longer pushed back outside the cylinder.
+- **Front-rim stick**: A shot that hits the front of the rim bounces back toward the court and ends as a miss, instead of pinning the ball on the iron and freezing the game.
+- **Net teleport**: The ball no longer snaps into the net when it clips the glass or rim. Flight is integrated in 1/120s steps, the backboard matches the drawn board and rebounds along the contact normal, and the rim stays solid unless the center actually crosses the opening from above. A make still falls through under gravity.
+
+### Added
+- **Mac app** `Free Throw Frenzy.app` and terminal command `free-throw-frenzy` (`npm run play`). Icon is a basketball dropping through a hoop.
+
 ## [0.9.0] — 2026-08-26
 ### Added
 - **CRT TV shell**: `CrtShell` + `crtTv.css` wrap Main Menu and game (4:3 glass, scanlines, control panel).

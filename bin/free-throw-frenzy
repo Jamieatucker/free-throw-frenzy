@@ -1,0 +1,133 @@
+#!/bin/bash
+# Open and run Free Throw Frenzy. Used by the terminal command and the Mac app.
+set -eu
+
+SOURCE="${BASH_SOURCE[0]}"
+while [ -L "$SOURCE" ]; do
+  DIR="$(cd -P "$(dirname "$SOURCE")" && pwd)"
+  SOURCE="$(readlink "$SOURCE")"
+  case "$SOURCE" in
+    /*) ;;
+    *) SOURCE="$DIR/$SOURCE" ;;
+  esac
+done
+ROOT="$(cd -P "$(dirname "$SOURCE")/.." && pwd)"
+APP_GAME="$ROOT/Free Throw Frenzy.app/Contents/Resources/game"
+
+sync_mac_app() {
+  if [ -f "$ROOT/build/index.html" ] && [ -d "$(dirname "$(dirname "$APP_GAME")")" ]; then
+    mkdir -p "$APP_GAME"
+    ditto "$ROOT/build" "$APP_GAME"
+  fi
+}
+
+export PATH="/usr/local/bin:/opt/homebrew/bin:${HOME}/.local/bin:${PATH:-/usr/bin:/bin}"
+if [ -s "${HOME}/.nvm/nvm.sh" ]; then
+  # shellcheck disable=SC1091
+  . "${HOME}/.nvm/nvm.sh"
+fi
+
+PIDFILE="${TMPDIR:-/tmp}/free-throw-frenzy.pid"
+PORTFILE="${TMPDIR:-/tmp}/free-throw-frenzy.port"
+LOG="${HOME}/Library/Logs/FreeThrowFrenzy.log"
+mkdir -p "$(dirname "$LOG")"
+
+port_in_use() {
+  lsof -nP -iTCP:"$1" -sTCP:LISTEN >/dev/null 2>&1
+}
+
+open_game() {
+  local url="$1"
+  if [ -t 1 ]; then
+    printf 'Free Throw Frenzy is running at %s\n' "$url"
+    printf 'Press Ctrl+C to quit.\n'
+  else
+    osascript -e 'display notification "Opening Free Throw Frenzy" with title "Free Throw Frenzy"' >/dev/null 2>&1 || true
+  fi
+  open "$url"
+}
+
+if [ -f "$PIDFILE" ] && [ -f "$PORTFILE" ]; then
+  OLD_PID="$(cat "$PIDFILE" 2>/dev/null || true)"
+  OLD_PORT="$(cat "$PORTFILE" 2>/dev/null || true)"
+  if [ -n "${OLD_PID}" ] && kill -0 "$OLD_PID" 2>/dev/null && [ -n "${OLD_PORT}" ]; then
+    open_game "http://127.0.0.1:${OLD_PORT}/"
+    # Already running: this launch should not tear the server down.
+    exit 0
+  fi
+fi
+
+needs_build=0
+if [ ! -f "$ROOT/build/index.html" ]; then
+  needs_build=1
+else
+  NEWER="$(find "$ROOT/src" "$ROOT/public" "$ROOT/package.json" -type f -newer "$ROOT/build/index.html" 2>/dev/null | head -n 1 || true)"
+  if [ -n "$NEWER" ]; then
+    needs_build=1
+  fi
+fi
+
+if [ "$needs_build" -eq 1 ]; then
+  if ! command -v npm >/dev/null 2>&1; then
+    osascript -e 'display alert "Free Throw Frenzy" message "Node.js was not found, so the game could not be built."' >/dev/null 2>&1 || true
+    echo "Node.js is required to build Free Throw Frenzy." >&2
+    exit 1
+  fi
+  if [ -t 1 ]; then
+    echo "Building Free Throw Frenzy…"
+  else
+    osascript -e 'display notification "Building the game…" with title "Free Throw Frenzy"' >/dev/null 2>&1 || true
+  fi
+  if ! (cd "$ROOT" && BROWSER=none npm run build >>"$LOG" 2>&1); then
+    osascript -e "display alert \"Free Throw Frenzy\" message \"The build failed. Details are in ${LOG}.\"" >/dev/null 2>&1 || true
+    echo "Build failed. See $LOG" >&2
+    exit 1
+  fi
+fi
+
+sync_mac_app
+
+PORT=4173
+while port_in_use "$PORT"; do
+  PORT=$((PORT + 1))
+  if [ "$PORT" -gt 4190 ]; then
+    echo "No free port for Free Throw Frenzy." >&2
+    exit 1
+  fi
+done
+
+SERVER_PID=""
+cleanup() {
+  if [ -n "$SERVER_PID" ]; then
+    kill "$SERVER_PID" 2>/dev/null || true
+    wait "$SERVER_PID" 2>/dev/null || true
+  fi
+  rm -f "$PIDFILE" "$PORTFILE"
+}
+trap cleanup EXIT INT TERM
+
+python3 -m http.server "$PORT" --bind 127.0.0.1 --directory "$ROOT/build" >>"$LOG" 2>&1 &
+SERVER_PID=$!
+echo $$ >"$PIDFILE"
+echo "$PORT" >"$PORTFILE"
+
+ready=0
+for _ in 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27 28 29 30 31 32 33 34 35 36 37 38 39 40 41 42 43 44 45 46 47 48 49 50; do
+  if curl -sf -o /dev/null "http://127.0.0.1:${PORT}/"; then
+    ready=1
+    break
+  fi
+  if ! kill -0 "$SERVER_PID" 2>/dev/null; then
+    break
+  fi
+  sleep 0.1
+done
+
+if [ "$ready" -ne 1 ]; then
+  echo "Free Throw Frenzy did not start. See $LOG" >&2
+  osascript -e "display alert \"Free Throw Frenzy\" message \"The game server did not start. Details are in ${LOG}.\"" >/dev/null 2>&1 || true
+  exit 1
+fi
+
+open_game "http://127.0.0.1:${PORT}/"
+wait "$SERVER_PID"
