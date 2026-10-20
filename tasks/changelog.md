@@ -1,5 +1,9 @@
 # Changelog — Free Throw Frenzy
 
+## [0.10.1] — 2026-10-20
+### Fixed
+- **Launcher memory**: Closing the last game tab stops the local server. The Mac app quits with that server instead of leaving Python running after the browser closes.
+
 ## [0.10.0] — 2026-10-19
 ### Fixed
 - **Under-net pass-through**: A ball that bounces up into the net keeps its momentum. Only a drop through the rim from above counts as a swish.

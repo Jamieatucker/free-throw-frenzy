@@ -39,3 +39,4 @@ alwaysApply: false
 | 2026-08-26 | Jerseys = 30 teams, colors only | Max customization without logo/IP assets |
 | 2026-08-26 | Per-shot ideal + 4% near-zone bonus | Varies perfect release; rewards precision without removing max-power penalty |
 | 2026-08-26 | Tests at `src/tests/` camelCase | CRA-safe imports; root `tests/` moved under `src/` |
+| 2026-10-20 | Session request, not an open-ended static server | Closing the game tab must end `python3` and the Mac app. A short grace period covers refresh. |

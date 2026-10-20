@@ -44,6 +44,10 @@ Desktop (spacebar charge) and mobile (touch hold/release). CRT UI must stay legi
 ### Camera
 - Side view; single canvas; vertical follow only (no X pan for overshoots/side-bounces).
 
+### Desktop app
+- Opening the Mac app or `npm run play` starts a local server and the game in the browser.
+- Closing the last game tab stops that server, and the Mac app quits with it, so it does not stay in memory.
+
 ### Non-Functional
 - ≤60 FPS via `requestAnimationFrame`.
 - Stack: TypeScript, React, Tailwind; code under `free-throw-frenzy/`.

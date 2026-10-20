@@ -14,9 +14,10 @@
 ```bash
 cd free-throw-frenzy
 npm install
-npm start          # localhost:3000
+npm start          # localhost:3000 (dev server; stays up until you stop it)
 npm test           # jest
 npm run build
+npm run play       # local game server; exits when the last game tab closes
 ```
 
 ## Phase 11 — CRT Shell
@@ -57,6 +58,12 @@ Helpers on `shopData` (+ jersey helpers): `resetEconomyAndUnlocks()` clears coin
 ## Design Patterns
 - State machine phases; engine mutates plain `GameState`; React overlays via callbacks.
 - Config module for constants (`NEAR_IDEAL_MAKE_BONUS` in `config.ts`).
+
+## Desktop play
+- `bin/free-throw-frenzy` and `Free Throw Frenzy.app` start `mac/session_server.py` (loopback only).
+- Each open game tab holds `GET /__ftf/session`. The last tab closing, or no tab within 60s of launch, stops the server.
+- Refresh is covered by a 1.5s grace period. `python3 mac/test_session_server.py` covers that lifetime.
+- The app binary is `clang -fobjc-arc -mmacosx-version-min=11.0 -framework Cocoa` from `mac/main.m`. `session_server.py` is copied into `Contents/Resources/`.
 
 ## Constraints
 - No external physics engines; minimal deps; mobile Safari/Chrome/Firefox; ≤60 FPS.

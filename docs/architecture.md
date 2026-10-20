@@ -51,6 +51,9 @@ flowchart TD
 ## Restart Wipe Flow
 `TvControls.Restart` → clear coins/unlocked BGs/jerseys in localStorage → remount game key / reset UI coin state. High score key untouched.
 
+## Desktop launcher
+The Mac app (`mac/main.m`) and `npm run play` (`bin/free-throw-frenzy`) serve the built game with `mac/session_server.py` on `127.0.0.1`. The server adds a session request to `index.html`, and each open tab holds that request. Closing the last tab ends it; after a short grace period (so a refresh can reconnect) the Python process exits. The Mac app quits when its server exits, and Cmd+Q still stops the server. A second launch reopens the game and leaves the existing server in place.
+
 ## Directory Layout
 ```
 free-throw-frenzy/
@@ -63,6 +66,8 @@ free-throw-frenzy/
 │   ├── types/
 │   ├── utils/        # shopData, jerseyData, difficultyData, …
 │   └── tests/        # camelCase unit tests (CRA-safe; was root tests/ + __tests__)
+├── mac/          # Mac app (`main.m`) and session server
+├── bin/          # `free-throw-frenzy` terminal launcher
 ├── docs/
 ├── tasks/
 └── diagrams/

@@ -7,6 +7,11 @@ alwaysApply: false
 
 ## Errors & Resolutions
 
+### 11. Local server stays resident after the game tab closes
+**Problem**: Quitting the browser left `python3 -m http.server` and the Mac app using memory. The server only stopped on Ctrl+C or Cmd+Q.
+**Root cause**: The launcher opened the URL and then waited on the server process. Nothing observed the browser tab.
+**Fix**: `mac/session_server.py` injects a held `GET /__ftf/session` per tab and exits after the last tab disconnects (1.5s grace so refresh can reconnect). The Mac app quits in the server task’s termination handler.
+
 ### 1. Impossible free throw shots (v0.2.0)
 **Problem**: The original `launchBall` used `idealAngle = atan2(dy - dist*0.55, dx)` and `speed = idealSpeed * (0.5 + power*0.7)` — these formulas produced trajectories that could never reach the rim at any power level.
 **Root cause**: The angle/speed mapping was arbitrary, not based on projectile physics. The "ideal" power of 0.72 produced an angle that overshot, and other powers either undershot or flew past.

@@ -9,6 +9,7 @@
 #include <unistd.h>
 
 static NSTask *serverTask = nil;
+static BOOL terminating = NO;
 
 static NSString *runtimeDir(void) {
     const char *tmp = getenv("TMPDIR");
@@ -113,14 +114,25 @@ static void showAlert(NSString *message) {
         return;
     }
 
+    NSString *serverScript = [[[NSBundle mainBundle] resourcePath] stringByAppendingPathComponent:@"session_server.py"];
+    if (![[NSFileManager defaultManager] fileExistsAtPath:serverScript]) {
+        showAlert(@"The game server is missing from the app.");
+        return;
+    }
+
     NSTask *task = [[NSTask alloc] init];
     task.executableURL = [NSURL fileURLWithPath:@"/usr/bin/python3"];
     task.arguments = @[
-        @"-m", @"http.server",
+        serverScript,
         [NSString stringWithFormat:@"%d", port],
-        @"--bind", @"127.0.0.1",
-        @"--directory", gameDir
+        gameDir
     ];
+    task.terminationHandler = ^(NSTask *finished) {
+        dispatch_async(dispatch_get_main_queue(), ^{
+            if (terminating) return;
+            [NSApp terminate:nil];
+        });
+    };
     NSString *logPath = [NSHomeDirectory() stringByAppendingPathComponent:@"Library/Logs/FreeThrowFrenzy.log"];
     [[NSFileManager defaultManager] createFileAtPath:logPath contents:nil attributes:nil];
     NSFileHandle *log = [NSFileHandle fileHandleForWritingAtPath:logPath];
@@ -160,6 +172,7 @@ static void showAlert(NSString *message) {
 }
 
 - (void)applicationWillTerminate:(NSNotification *)notification {
+    terminating = YES;
     if (serverTask != nil && serverTask.isRunning) {
         [serverTask terminate];
     }

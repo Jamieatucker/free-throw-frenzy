@@ -1,5 +1,6 @@
 #!/bin/bash
-# Open and run Free Throw Frenzy. Used by the terminal command and the Mac app.
+# Open and run Free Throw Frenzy from the terminal (`npm run play`).
+# The Mac app uses mac/main.m and the same session server.
 set -eu
 
 SOURCE="${BASH_SOURCE[0]}"
@@ -18,6 +19,11 @@ sync_mac_app() {
   if [ -f "$ROOT/build/index.html" ] && [ -d "$(dirname "$(dirname "$APP_GAME")")" ]; then
     mkdir -p "$APP_GAME"
     ditto "$ROOT/build" "$APP_GAME"
+  fi
+  local resources
+  resources="$(dirname "$APP_GAME")"
+  if [ -d "$resources" ] && [ -f "$ROOT/mac/session_server.py" ]; then
+    cp "$ROOT/mac/session_server.py" "$resources/session_server.py"
   fi
 }
 
@@ -38,9 +44,14 @@ port_in_use() {
 
 open_game() {
   local url="$1"
+  local owns_server="${2:-0}"
   if [ -t 1 ]; then
-    printf 'Free Throw Frenzy is running at %s\n' "$url"
-    printf 'Press Ctrl+C to quit.\n'
+    if [ "$owns_server" -eq 1 ]; then
+      printf 'Free Throw Frenzy is running at %s\n' "$url"
+      printf 'Closing the game tab stops the server. Ctrl+C stops it too.\n'
+    else
+      printf 'Free Throw Frenzy is already running at %s\n' "$url"
+    fi
   else
     osascript -e 'display notification "Opening Free Throw Frenzy" with title "Free Throw Frenzy"' >/dev/null 2>&1 || true
   fi
@@ -51,7 +62,7 @@ if [ -f "$PIDFILE" ] && [ -f "$PORTFILE" ]; then
   OLD_PID="$(cat "$PIDFILE" 2>/dev/null || true)"
   OLD_PORT="$(cat "$PORTFILE" 2>/dev/null || true)"
   if [ -n "${OLD_PID}" ] && kill -0 "$OLD_PID" 2>/dev/null && [ -n "${OLD_PORT}" ]; then
-    open_game "http://127.0.0.1:${OLD_PORT}/"
+    open_game "http://127.0.0.1:${OLD_PORT}/" 0
     # Already running: this launch should not tear the server down.
     exit 0
   fi
@@ -106,7 +117,7 @@ cleanup() {
 }
 trap cleanup EXIT INT TERM
 
-python3 -m http.server "$PORT" --bind 127.0.0.1 --directory "$ROOT/build" >>"$LOG" 2>&1 &
+python3 "$ROOT/mac/session_server.py" "$PORT" "$ROOT/build" >>"$LOG" 2>&1 &
 SERVER_PID=$!
 echo $$ >"$PIDFILE"
 echo "$PORT" >"$PORTFILE"
@@ -129,5 +140,5 @@ if [ "$ready" -ne 1 ]; then
   exit 1
 fi
 
-open_game "http://127.0.0.1:${PORT}/"
+open_game "http://127.0.0.1:${PORT}/" 1
 wait "$SERVER_PID"

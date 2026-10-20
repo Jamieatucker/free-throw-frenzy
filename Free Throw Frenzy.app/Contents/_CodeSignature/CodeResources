@@ -10,7 +10,7 @@
 		</data>
 		<key>Resources/game/asset-manifest.json</key>
 		<data>
-		U8dUbcVWVWXuuNKS1mmNwK9v1DA=
+		zVsT/QssMEdlRqq4x3T90xvx9FA=
 		</data>
 		<key>Resources/game/favicon.ico</key>
 		<data>
@@ -18,7 +18,7 @@
 		</data>
 		<key>Resources/game/index.html</key>
 		<data>
-		kJF69SyDH6M99uGLi3kMsQGGCmE=
+		MSmXZz3DoRWRoOnoNqkSe7pybVo=
 		</data>
 		<key>Resources/game/logo192.png</key>
 		<data>
@@ -44,6 +44,42 @@
 		<data>
 		rzuLV2/4QCmztGkDVwfT+xBQbQo=
 		</data>
+		<key>Resources/game/static/js/main.77fb8426.js</key>
+		<data>
+		THbIUeYH3wyE4RXqsS9z5MbPSBo=
+		</data>
+		<key>Resources/game/static/js/main.77fb8426.js.LICENSE.txt</key>
+		<data>
+		9jdBoSLvub/SxTyfVUswOQVbCM0=
+		</data>
+		<key>Resources/game/static/js/main.77fb8426.js.map</key>
+		<data>
+		ZjtHEilDYPVgrxMN+f7YFtauuAU=
+		</data>
+		<key>Resources/game/static/js/main.beb67461.js</key>
+		<data>
+		rW0lDAcrqYNbK1acWw+YcyQtvkQ=
+		</data>
+		<key>Resources/game/static/js/main.beb67461.js.LICENSE.txt</key>
+		<data>
+		9jdBoSLvub/SxTyfVUswOQVbCM0=
+		</data>
+		<key>Resources/game/static/js/main.beb67461.js.map</key>
+		<data>
+		cg3hz7DhWrKM/T8tnlF30uioy9A=
+		</data>
+		<key>Resources/game/static/js/main.e9b3edb9.js</key>
+		<data>
+		MFtn2ZKZRhdlWKB6lpEx05T3Zzo=
+		</data>
+		<key>Resources/game/static/js/main.e9b3edb9.js.LICENSE.txt</key>
+		<data>
+		9jdBoSLvub/SxTyfVUswOQVbCM0=
+		</data>
+		<key>Resources/game/static/js/main.e9b3edb9.js.map</key>
+		<data>
+		99wbkwaG2pGH2Mwnpd2hp+uOiYE=
+		</data>
 		<key>Resources/game/static/js/main.ed1fc907.js</key>
 		<data>
 		I8Xk+aCArrQneAC3bnJf0l36sSU=
@@ -55,6 +91,10 @@
 		<key>Resources/game/static/js/main.ed1fc907.js.map</key>
 		<data>
 		YUL6EfVSf9ztIJcm+P0rDBZtrYw=
+		</data>
+		<key>Resources/session_server.py</key>
+		<data>
+		eY5KDp60x1qgM9/lc0FW/IZs26M=
 		</data>
 	</dict>
 	<key>files2</key>
@@ -70,7 +110,7 @@
 		<dict>
 			<key>hash2</key>
 			<data>
-			LPfFMiepfx1lSfAstP9F9Aj7ThjtZj6RivPgvt7+API=
+			MVdxJdZjt2ZwUYWqzpDBrnK/qY9E8xdfaAa7+pm/3Mc=
 			</data>
 		</dict>
 		<key>Resources/game/favicon.ico</key>
@@ -84,7 +124,7 @@
 		<dict>
 			<key>hash2</key>
 			<data>
-			1wCsazAr5m6obbwCvRNfLmc5a3EF3uSrwcOecA/w3Vw=
+			rVz6fZlqOpDHG1hEyotDOAbhz40IlJNwCM3BsJUfhz0=
 			</data>
 		</dict>
 		<key>Resources/game/logo192.png</key>
@@ -129,6 +169,69 @@
 			U0enFKTsP7lIcdgzgCc1Bu6DHSI2nO/U900HRJwJKYQ=
 			</data>
 		</dict>
+		<key>Resources/game/static/js/main.77fb8426.js</key>
+		<dict>
+			<key>hash2</key>
+			<data>
+			pse76UMBtoXzE7dD5g453todesXalV3Tf/iZ7g6BJp4=
+			</data>
+		</dict>
+		<key>Resources/game/static/js/main.77fb8426.js.LICENSE.txt</key>
+		<dict>
+			<key>hash2</key>
+			<data>
+			/NROqiSZLk8jilDcird9iyBS5sgAbIrvMYf3ZM9VQG0=
+			</data>
+		</dict>
+		<key>Resources/game/static/js/main.77fb8426.js.map</key>
+		<dict>
+			<key>hash2</key>
+			<data>
+			TBCG5oPYO3gpERkk3Wqg6q+2b2zsJAZBZfoJR+8I/xs=
+			</data>
+		</dict>
+		<key>Resources/game/static/js/main.beb67461.js</key>
+		<dict>
+			<key>hash2</key>
+			<data>
+			Uv/nxuMyID01Gpb9/IKtSUie2i6vUiynmjyDNmC/eBI=
+			</data>
+		</dict>
+		<key>Resources/game/static/js/main.beb67461.js.LICENSE.txt</key>
+		<dict>
+			<key>hash2</key>
+			<data>
+			/NROqiSZLk8jilDcird9iyBS5sgAbIrvMYf3ZM9VQG0=
+			</data>
+		</dict>
+		<key>Resources/game/static/js/main.beb67461.js.map</key>
+		<dict>
+			<key>hash2</key>
+			<data>
+			L79YM/r3cRbWNRqcfsO8uI49DDJ8qm3xIE9P/V2gZVE=
+			</data>
+		</dict>
+		<key>Resources/game/static/js/main.e9b3edb9.js</key>
+		<dict>
+			<key>hash2</key>
+			<data>
+			qDH8cS6Ua4RSFZR7+xTnZcUvu08+zpA9+AFEDbKQeGk=
+			</data>
+		</dict>
+		<key>Resources/game/static/js/main.e9b3edb9.js.LICENSE.txt</key>
+		<dict>
+			<key>hash2</key>
+			<data>
+			/NROqiSZLk8jilDcird9iyBS5sgAbIrvMYf3ZM9VQG0=
+			</data>
+		</dict>
+		<key>Resources/game/static/js/main.e9b3edb9.js.map</key>
+		<dict>
+			<key>hash2</key>
+			<data>
+			pjm2S1hNgLzD+jykERvSEbH0r89skOhS9b6fHZ68674=
+			</data>
+		</dict>
 		<key>Resources/game/static/js/main.ed1fc907.js</key>
 		<dict>
 			<key>hash2</key>
@@ -148,6 +251,13 @@
 			<key>hash2</key>
 			<data>
 			slk4FUDJOCK+0z72L66ofbRJLgnjuZNld+ACJbKcbZw=
+			</data>
+		</dict>
+		<key>Resources/session_server.py</key>
+		<dict>
+			<key>hash2</key>
+			<data>
+			ZViUWzGAUUOZfsmgdrwBCSmsD/c9xnUWFyTZr+vYsSs=
 			</data>
 		</dict>
 	</dict>

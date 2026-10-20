@@ -103,4 +103,4 @@
 - None.
 
 ## Current Status
-v0.9.0 — Phase 11 complete. 106 tests passing. CRT UI + 30 jerseys + per-shot ideal (+4%).
+v0.10.1 — Phase 11 complete. Desktop launcher stops its server when the last game tab closes. `mac/test_session_server.py` covers that. Game unit tests were last run at 106 passing.
